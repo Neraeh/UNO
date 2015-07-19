@@ -7,11 +7,14 @@ class Card : public QObject
 {
     Q_OBJECT
 public:
-    explicit Card(QObject *parent = 0);
+    explicit Card(QString _color, QString _id);
+    QString getColor();
+    QString getId();
+    bool equals(Card _arg);
+    QString toString();
 
-signals:
-
-public slots:
+private:
+    QString color, id;
 };
 
 #endif // CARD_H
