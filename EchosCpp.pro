@@ -19,10 +19,18 @@ SOURCES += main.cpp \
     chan.cpp \
     irc.cpp \
     user.cpp \
-    echos.cpp
+    echos.cpp \
+    card.cpp \
+    cards.cpp \
+    deck.cpp \
+    players.cpp
 
 HEADERS += \
     chan.h \
     irc.h \
     user.h \
-    echos.h
+    echos.h \
+    card.h \
+    cards.h \
+    deck.h \
+    players.h
