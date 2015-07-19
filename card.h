@@ -8,10 +8,10 @@ class Card : public QObject
     Q_OBJECT
 public:
     explicit Card(QString _color, QString _id);
-    QString getColor();
-    QString getId();
-    bool equals(Card _arg);
-    QString toString();
+    QString getColor() const;
+    QString getId() const;
+    QString toString() const;
+    inline bool operator==(const Card& other) const;
 
 private:
     QString color, id;

@@ -6,25 +6,25 @@ Card::Card(QString _color, QString _id) : QObject()
     id = _id.toUpper();
 }
 
-QString Card::getColor()
+QString Card::getColor() const
 {
     return color;
 }
 
-QString Card::getId()
+QString Card::getId() const
 {
     return id;
 }
 
-bool Card::equals(Card _arg)
+inline bool Card::operator==(const Card& other) const
 {
-    if (_arg.getId() == id && _arg.getColor() == color)
+    if (getId() == other.getId() && getColor() == other.getColor())
         return true;
     else
         return false;
 }
 
-QString Card::toString()
+QString Card::toString() const
 {
     QString card = "\x02""\x03""01";
 

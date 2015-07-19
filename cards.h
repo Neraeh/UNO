@@ -9,9 +9,7 @@ class Cards : public QObject
 public:
     explicit Cards(QObject *parent = 0);
 
-signals:
 
-public slots:
 };
 
 #endif // CARDS_H
