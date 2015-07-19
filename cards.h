@@ -2,14 +2,20 @@
 #define CARDS_H
 
 #include <QObject>
+#include "card.h"
 
 class Cards : public QObject
 {
     Q_OBJECT
 public:
-    explicit Cards(QObject *parent = 0);
+    explicit Cards();
+    Card* get(int i) const;
+    int size() const;
+    void remove(int i);
+    bool isEmpty() const;
 
-
+private:
+    QList<Card*> cards;
 };
 
 #endif // CARDS_H
