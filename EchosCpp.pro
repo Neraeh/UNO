@@ -16,21 +16,19 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp \
-    chan.cpp \
-    irc.cpp \
-    user.cpp \
     echos.cpp \
     card.cpp \
     cards.cpp \
     deck.cpp \
-    players.cpp
+    players.cpp \
+    player.cpp
 
 HEADERS += \
-    chan.h \
-    irc.h \
-    user.h \
     echos.h \
     card.h \
     cards.h \
     deck.h \
-    players.h
+    players.h \
+    player.h
+
+include(D:\Dev\src\libcommuni\src\src.pri)

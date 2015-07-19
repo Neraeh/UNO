@@ -4,6 +4,6 @@
 int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
-    Echos echos;
+    Echos echos(&a);
     return a.exec();
 }

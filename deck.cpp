@@ -7,7 +7,7 @@ Deck::Deck(Echos *_parent) : QObject(_parent)
     {
         QTime time = QTime::currentTime();
         qsrand((uint)time.msec());
-        int rand = qrand() % (parent->getCards()->size());
+        int rand = qrand() % parent->getCards()->size();
         cards.append(parent->getCards()->get(rand));
         parent->getCards()->remove(rand);
     }
@@ -20,7 +20,7 @@ QString Deck::randCards(int _count)
     {
         QTime time = QTime::currentTime();
         qsrand((uint)time.msec());
-        int rand = qrand() % (parent->getCards()->size());
+        int rand = qrand() % parent->getCards()->size();
         cards.append(parent->getCards()->get(rand));
         newCards += parent->getCards()->get(rand)->toString();
         parent->getCards()->remove(rand);

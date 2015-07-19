@@ -1,7 +1,76 @@
 #include "players.h"
 
-Players::Players(QObject *parent) : QObject(parent)
+Players::Players() : QObject()
 {
-
+    inversed = false;
 }
 
+void Players::add(Player* _player)
+{
+    players.append(_player);
+}
+
+void Players::remove(QString _name)
+{
+    players.removeAt(indexOf(_name));
+}
+
+bool Players::contains(QString _name) const
+{
+    foreach (Player* w, players)
+        if (w->getName() == _name)
+            return true;
+    return false;
+}
+
+QString Players::toString() const
+{
+    QString str;
+    foreach (Player* w, players)
+        str += w->getColoredName() + ", ";
+    str.chop(2);
+    return str;
+}
+
+Player* Players::rand() const
+{
+    qsrand(QTime::currentTime().msec());
+    return players.at(qrand() % players.size());
+}
+
+Player* Players::getPlayer(QString _name) const
+{
+    foreach (Player* w, players)
+        if (w->getName() == _name)
+            return w;
+    return NULL;
+}
+
+Player* Players::getPlayer(int i) const
+{
+    return players.at(i);
+}
+
+int Players::indexOf(QString _name) const
+{
+    foreach (Player* w, players)
+        if (w->getName() == _name)
+            return players.indexOf(w);
+    return -1;
+}
+
+int Players::size() const
+{
+    return players.size();
+}
+
+bool Players::isInversed() const
+{
+    return inversed;
+}
+
+void Players::clear()
+{
+    players.clear();
+    inversed = false;
+}
