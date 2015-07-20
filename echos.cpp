@@ -207,7 +207,7 @@ void Echos::clear()
 void Echos::sendMessageIG(QString message)
 {
     if (inGame || preGame)
-        sendMessage("\x03""01,15[""\x02""\x03""04,15UNO""\x0F""\x03""01,15]""\x02""\x03""00,14" + message + " ");
+        sendMessage("\x03""01,15[""\x02""\x03""04,15UNO""\x0F""\x03""01,15]""\x02""\x03""00,14 " + message + " ");
     else
         sendMessage(message);
 }
