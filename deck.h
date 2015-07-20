@@ -7,6 +7,7 @@
 #include "echos.h"
 #include "card.h"
 
+class Echos;
 class Deck : public QObject
 {
     Q_OBJECT

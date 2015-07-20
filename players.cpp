@@ -15,6 +15,11 @@ void Players::remove(QString _name)
     players.removeAt(indexOf(_name));
 }
 
+void Players::remove(Player *_player)
+{
+    players.removeOne(_player);
+}
+
 bool Players::contains(QString _name) const
 {
     foreach (Player* w, players)
@@ -32,6 +37,11 @@ QString Players::toString() const
     return str;
 }
 
+QString Players::first() const
+{
+    return players.at(0)->getName();
+}
+
 Player* Players::rand() const
 {
     qsrand(QTime::currentTime().msec());
@@ -44,11 +54,6 @@ Player* Players::getPlayer(QString _name) const
         if (w->getName() == _name)
             return w;
     return NULL;
-}
-
-Player* Players::getPlayer(int i) const
-{
-    return players.at(i);
 }
 
 int Players::indexOf(QString _name) const
