@@ -15,6 +15,7 @@ public:
     void remove(QString _name);
     void remove(Player* _player);
     bool contains(QString _name) const;
+    QString list() const;
     QString toString() const;
     QString first() const;
     Player *rand() const;
@@ -23,6 +24,7 @@ public:
     int size() const;
     bool isInversed() const;
     void clear();
+    QList<Player*> getList() const;
 
 private:
     QList<Player*> players;

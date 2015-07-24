@@ -12,8 +12,11 @@ TARGET = EchosCpp
 CONFIG   += console
 CONFIG   -= app_bundle
 
-TEMPLATE = app
+QMAKE_CFLAGS_RELEASE += -O2 -pipe
+QMAKE_CXXFLAGS_RELEASE += $$QMAKE_CFLAGS_RELEASE
+QMAKE_LFLAGS_RELEASE += -s
 
+TEMPLATE = app
 
 SOURCES += main.cpp \
     echos.cpp \

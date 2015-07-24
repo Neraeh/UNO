@@ -28,6 +28,15 @@ bool Players::contains(QString _name) const
     return false;
 }
 
+QString Players::list() const
+{
+    QString str;
+    foreach (Player* w, players)
+        str += w->getColoredName() + ", ";
+    str.chop(2);
+    return str;
+}
+
 QString Players::toString() const
 {
     QString str;
@@ -78,4 +87,9 @@ void Players::clear()
 {
     players.clear();
     inversed = false;
+}
+
+QList<Player*> Players::getList() const
+{
+    return players;
 }
