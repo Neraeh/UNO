@@ -1,8 +1,6 @@
 #ifndef PLAYERS_H
 #define PLAYERS_H
 
-#include <QObject>
-#include <QList>
 #include "player.h"
 
 class Player;

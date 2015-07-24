@@ -1,9 +1,6 @@
 #ifndef DECK_H
 #define DECK_H
 
-#include <QObject>
-#include <QList>
-#include <QTime>
 #include "echos.h"
 #include "card.h"
 

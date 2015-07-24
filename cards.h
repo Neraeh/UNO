@@ -1,7 +1,6 @@
 #ifndef CARDS_H
 #define CARDS_H
 
-#include <QObject>
 #include "card.h"
 
 class Cards : public QObject

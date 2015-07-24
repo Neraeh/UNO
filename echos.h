@@ -3,11 +3,8 @@
 
 #include <QCoreApplication>
 #include <QTextCodec>
-#include <QLinkedList>
 #include <IrcConnection>
 #include <IrcCommand>
-#include <IrcUser>
-#include <Irc>
 #include "cards.h"
 #include "players.h"
 
