@@ -31,13 +31,13 @@ QString Card::toString() const
     if (color == "R")
         card += ",04";
     else if (color == "B")
-        card += ",11";
+        card += ",02";
     else if (color == "J")
         card += ",08";
     else if (color == "V")
         card += ",03";
     else
-        card += "\x03""00,01";
+        card += ",00""\x03""00,01";
 
     card += "[" + id + "]\x0F";
     return card;

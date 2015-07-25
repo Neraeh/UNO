@@ -9,6 +9,9 @@ Echos::Echos(QCoreApplication *_parent) : IrcConnection(_parent)
     lastCard = new Card("", "");
     inGame = false, preGame = false, drawed = false, inversed = false, inPing = false;
 
+    slaps = new QSettings(":/slaps/slaps.ini", QSettings::IniFormat);
+    slaps->setIniCodec("UTF-8");
+
     qputenv("IRC_DEBUG", "1");
 
     setServers(QStringList("irc.t411.io"));
@@ -149,29 +152,22 @@ void Echos::onQuit(IrcQuitMessage *message)
     modes.remove(message->nick());
 }
 
-void Echos::showCards(QString nick)
+void Echos::showCards(QString nick, QString to)
 {
     if (nick.isEmpty())
         nick = currPlayer;
-    sendCommand(IrcCommand::createNotice(nick, players->getPlayer(nick)->getDeck()->toString()));
+    if (to.isEmpty())
+        to = nick;
+    sendCommand(IrcCommand::createNotice(to, players->getPlayer(nick)->getDeck()->toString()));
 }
 
 QString Echos::nextPlayer()
 {
-    if (inversed)
-    {
-        if (turns.indexOf(currPlayer) == 0)
-            return players->getPlayer(turns.at(turns.size() - 1))->getName();
-        else
-            return players->getPlayer(turns.at(turns.indexOf(currPlayer) - 1))->getName();
-    }
+    qDebug() << inversed << (turns.indexOf(currPlayer) + (inversed ? -1 : 1) > turns.size() -1) << (turns.indexOf(currPlayer) + (inversed ? -1 : 1) < 0);
+    if (turns.indexOf(currPlayer) + (inversed ? -1 : 1) > turns.size() -1 || turns.indexOf(currPlayer) + (inversed ? -1 : 1) < 0)
+        return inversed ? turns.last() : turns.first();
     else
-    {
-        if (turns.indexOf(currPlayer) == turns.size() - 1)
-            return players->getPlayer(turns.at(0))->getName();
-        else
-            return players->getPlayer(turns.at(turns.indexOf(currPlayer) + 1))->getName();
-    }
+        return turns.at(turns.indexOf(currPlayer) + (inversed ? -1 : 1));
 }
 
 void Echos::remPlayer(QString nick)
@@ -179,6 +175,8 @@ void Echos::remPlayer(QString nick)
     if (players->contains(nick))
     {
         sendMessage(players->getPlayer(nick)->getColoredName() + " a quitté la partie");
+        players->remove(nick);
+        turns.removeOne(nick);
 
         if (players->size() == 1 && inGame)
         {
@@ -190,14 +188,11 @@ void Echos::remPlayer(QString nick)
             currPlayer = nextPlayer();
             sendMessage("C'est donc au tour de " + players->getPlayer(currPlayer)->getColoredName());
         }
-        else if (players->isEmpty() && preGame)
+        else if (players->size() == 0 && preGame)
         {
             sendMessage("Plus aucun joueur, la préparation de la partie est annulée");
             clear();
         }
-
-        players->remove(nick);
-        turns.removeOne(nick);
     }
 }
 
@@ -209,6 +204,7 @@ void Echos::clear()
     preGame = false;
     drawed = false;
     inversed = false;
+    delete cards;
     cards = new Cards();
 }
 
@@ -216,12 +212,30 @@ void Echos::sendMessage(QString message)
 {
     message.replace("\x02", "\x03""04,15");
     message.replace("\x0F", "\x03""00,14");
-    sendCommand(IrcCommand::createMessage(chan, "\x03""01,15[""\x02""\x03""04,15UNO""\x0F""\x03""01,15]""\x02""\x03""00,14 " + message + " "));
+    QString msg = "\x03""01,15[""\x02""\x03""04,15UNO""\x0F""\x03""01,15]""\x02""\x03""00,14 " + message;
+    int len;
+    do {
+        msg += " ";
+        QString lenmsg = msg;
+        for (int i = 0; i < lenmsg.length(); i++)
+        {
+            while (lenmsg.at(i) == QString("\x02") || lenmsg.at(i) == QString("\x0F") || lenmsg.at(i) == QString("\x16") || lenmsg.at(i) == QString ("\x03"))
+            {
+                if (lenmsg.at(i) == QString("\x02") || lenmsg.at(i) == QString("\x0F") || lenmsg.at(i) == QString("\x16"))
+                    lenmsg.remove(i, 1);
+                else if (lenmsg.at(i) == QString("\x03"))
+                    lenmsg.remove(i, 6);
+            }
+        }
+        len = lenmsg.length();
+    } while (len < 100);
+    sendCommand(IrcCommand::createMessage(chan, msg));
 }
 
 void Echos::command(QString nick, QString cmd, QStringList args)
 {
     bool end = false;
+
     if (isOp(nick))
     {
         if (cmd == "exit")
@@ -238,49 +252,49 @@ void Echos::command(QString nick, QString cmd, QStringList args)
     {
         if (args.isEmpty())
         {
-            sendMessage("\x02""Tout le temps:""\x0F"" !ping, !version, !slaps, !regles");
-            sendMessage("\x02""Avant et pendant la partie:""\x0F"" !liste, !quitter");
-            sendMessage("\x02""Avant la partie:""\x0F"" !uno, !rejoindre, !commencer");
-            sendMessage("\x02""Pendant la partie:""\x0F"" !j, !pioche, !fin, !main, !cartes");
+            sendMessage("\x02""Tout le temps :""\x0F"" !ping, !version, !slaps, !regles");
+            sendMessage("\x02""Avant et pendant la partie :""\x0F"" !liste, !quitter");
+            sendMessage("\x02""Avant la partie :""\x0F"" !uno, !rejoindre, !commencer");
+            sendMessage("\x02""Pendant la partie :""\x0F"" !j, !pioche, !fin, !main, !cartes");
             sendMessage("\x02""!aide commande""\x0F"" pour avoir des détails sur une commande (exemple: !aide rejoindre)");
         }
         else if (args.first() == "uno")
-            sendMessage("\x02""Aide:""\x0F"" !uno : commencer la préparation d'une nouvelle partie");
+            sendMessage("\x02""Aide :""\x0F"" !uno : commencer la préparation d'une nouvelle partie");
         else if (args.first() == "j")
         {
-            sendMessage("\x02""Aide:""\x0F"" !j");
+            sendMessage("\x02""Aide :""\x0F"" !j");
             sendMessage("Utilisation : !j couleur carte");
             sendMessage("Exemple : pour jouer un " + Card("V", "7").toString() + " il faut écrire !j v 7");
         }
         else if (args.first() == "rejoindre")
-            sendMessage("\x02""Aide:""\x0F"" !rejoindre : rejoindre la partie en préparation");
+            sendMessage("\x02""Aide :""\x0F"" !rejoindre : rejoindre la partie en préparation");
         else if (args.first() == "quitter")
-            sendMessage("\x02""Aide:""\x0F"" !quitter : quitter la partie");
+            sendMessage("\x02""Aide :""\x0F"" !quitter : quitter la partie");
         else if (args.first() == "commencer")
-            sendMessage("\x02""Aide:""\x0F"" !commencer : commencer la partie en préparation");
+            sendMessage("\x02""Aide :""\x0F"" !commencer : commencer la partie en préparation");
         else if (args.first() == "liste" || args.first() == "list")
-            sendMessage("\x02""Aide:""\x0F"" !liste : affiche la liste des joueurs dans la partie");
+            sendMessage("\x02""Aide :""\x0F"" !liste : affiche la liste des joueurs dans la partie");
         else if (args.first() == "pioche")
-            sendMessage("\x02""Aide:""\x0F"" !pioche : piocher une carte");
+            sendMessage("\x02""Aide :""\x0F"" !pioche : piocher une carte");
         else if (args.first() == "fin" || args.first() == "f")
-            sendMessage("\x02""Aide:""\x0F"" !fin : passer son tour");
+            sendMessage("\x02""Aide :""\x0F"" !fin : passer son tour");
         else if (args.first() == "main" || args.first() == "m")
-            sendMessage("\x02""Aide:""\x0F"" !main : affiche les cartes dans votre main et la carte visible");
+            sendMessage("\x02""Aide :""\x0F"" !main : affiche les cartes dans votre main et la carte visible");
         else if (args.first() == "cartes")
-            sendMessage("\x02""Aide:""\x0F"" !cartes : affiche le nombre de cartes restantes dans la pioche");
+            sendMessage("\x02""Aide :""\x0F"" !cartes : affiche le nombre de cartes restantes dans la pioche");
         else if (args.first() == "regles" || args.first() == "rules")
-            sendMessage("\x02""Aide:""\x0F"" !regles : affiche les règles du jeu");
+            sendMessage("\x02""Aide :""\x0F"" !regles : affiche les règles du jeu");
         else if (args.first() == "ping")
-            sendMessage("\x02""Aide:""\x0F"" !ping : affiche la latence entre ""\x02" + nickName() + "\x0F"" et vous");
+            sendMessage("\x02""Aide :""\x0F"" !ping : affiche la latence entre ""\x02" + nickName() + "\x0F"" et vous");
         else if (args.first() == "version")
-            sendMessage("\x02""Aide:""\x0F"" !version : affiche la version du client de l'utilisateur donné");
+            sendMessage("\x02""Aide :""\x0F"" !version : affiche la version du client de l'utilisateur donné");
         else if (args.first() == "slaps")
             command(nickName(), "slaps", QStringList() << nick);
         else
             sendMessage("Cette commande n'existe pas, " + (players->contains(nick) ? players->getPlayer(nick)->getColoredName() : "\x02" + nick));
     }
     else if (cmd == "regles" || cmd == "rules")
-        sendMessage("\x02""Règles: ""\x0F""http://tuxange.org/unorules/");
+        sendMessage("\x02""Règles :""\x0F"" http://tuxange.org/unorules/");
     else if (cmd == "version")
     {
         if (args.isEmpty())
@@ -291,7 +305,12 @@ void Echos::command(QString nick, QString cmd, QStringList args)
             sendMessage("\x02" + args.first() + "\x0F"" n'a pas été trouvé");
     }
     else if (cmd == "slaps")
-        sendMessage("Pas encore implémentée");
+    {
+        if (args.isEmpty())
+            args.append(nickName());
+        qsrand((uint)QTime::currentTime().msec());
+        sendCommand(IrcCommand::createMessage(chan, "\x02" + nick + "\x0F"" " + slaps->value(QString::number(qrand() % 23)).toString().replace("%s", "\x02" + args.first() + "\x0F")));
+    }
     else if (cmd == "ping")
     {
         if (currPing == "" || QTime::currentTime().msecsSinceStartOfDay() - pingTimeBegin > 20000)
@@ -325,6 +344,7 @@ void Echos::command(QString nick, QString cmd, QStringList args)
             {
                 Player *p = new Player(nick, this);
                 players->add(p);
+                turns.append(nick);
                 sendMessage(p->getColoredName() + " a rejoint la partie");
                 sendMessage("Il y a " + QString::number(players->size()) + " joueurs dans la partie");
             }
@@ -341,39 +361,44 @@ void Echos::command(QString nick, QString cmd, QStringList args)
         if (!players->contains(nick) && preGame)
             sendMessage("Vous n'êtes pas dans cette partie, ""\x02" + nick);
         else if (players->size() > 1 && preGame)
-        {
+        {;
             QTime time = QTime::currentTime();
             qsrand((uint)time.msec());
             int rand;
-            do { rand = qrand() % cards->size() - 1; } while (cards->get(rand) == new Card("N", "+4"));
+            do { rand = qrand() % cards->size() - 1; } while (cards->get(rand)->getId() == "+4");
             lastCard = cards->get(rand);
             cards->remove(rand);
+            foreach (Player *w, players->getList())
+                w->getDeck()->init();
+            sendCommand(IrcCommand::createMessage(chan, " "));
             sendMessage("Carte visible : " + lastCard->toString());
             currPlayer = players->rand()->getName();
 
             if (lastCard->getId() == "+2")
             {
+                sendMessage(players->getPlayer(currPlayer)->getColoredName() + " pioche 2 cartes");
                 sendCommand(IrcCommand::createNotice(currPlayer, players->getPlayer(currPlayer)->getDeck()->randCards(2)));
-                sendMessage(players->getPlayer(currPlayer)->getName() + " passe son tour");
+                sendMessage(players->getPlayer(currPlayer)->getColoredName() + " passe son tour");
                 currPlayer = nextPlayer();
             }
             else if (lastCard->getId() == "I")
             {
-                sendMessage("Le sens de jeu est ""\x16""inversé");
+                sendMessage("Le sens du jeu est ""\x16""inversé");
                 inversed = true;
             }
             else if (lastCard->getId() == "P")
             {
-                sendMessage(players->getPlayer(currPlayer)->getName() + " passe son tour");
+                sendMessage(players->getPlayer(currPlayer)->getColoredName() + " passe son tour");
                 currPlayer = nextPlayer();
             }
 
-            sendMessage("C'est au tour de " + players->getPlayer(currPlayer)->getName());
+            sendMessage("C'est au tour de " + players->getPlayer(currPlayer)->getColoredName());
 
             foreach (Player *w, players->getList())
                 sendCommand(IrcCommand::createNotice(w->getName(), w->getDeck()->toString()));
 
             inGame = true;
+            preGame = false;
         }
         else if (preGame)
             sendMessage("Il n'y a pas assez de joueurs pour commencer la partie, " + players->getPlayer(nick)->getColoredName());
@@ -389,6 +414,7 @@ void Echos::command(QString nick, QString cmd, QStringList args)
             preGame = true;
             Player *p = new Player(nick, this);
             players->add(p);
+            turns.append(nick);
             sendMessage(p->getColoredName() + " a créé une nouvelle partie");
             sendMessage(p->getColoredName() + " a rejoint la partie");
             sendMessage("Il y a 1 joueur dans la partie");
@@ -397,6 +423,191 @@ void Echos::command(QString nick, QString cmd, QStringList args)
             sendMessage("Une partie est déjà en cours, " + (players->contains(nick) ? players->getPlayer(nick)->getColoredName() : "\x02" + nick));
         else // preGame
             sendMessage("Une partie est déjà en préparation, " + (players->contains(nick) ? players->getPlayer(nick)->getColoredName() : "\x02" + nick));
+    }
+    else if (cmd == "pioche")
+    {
+        if (!drawed && currPlayer == nick)
+        {
+            sendCommand(IrcCommand::createNotice(currPlayer, players->getPlayer(currPlayer)->getDeck()->randCards(1)));
+            sendMessage("Carte visible : " + lastCard->toString());
+            drawed = true;
+        }
+        else if (currPlayer == nick)
+            sendMessage("Vous avez déjà pioché, " + players->getPlayer(nick)->getColoredName());
+        else
+            sendMessage("C'est au tour de " + players->getPlayer(currPlayer)->getColoredName() + ", " + (players->contains(nick) ? players->getPlayer(nick)->getColoredName() : "\x02" + nick));
+    }
+    else if (cmd == "fin" || cmd == "f")
+    {
+        if (drawed && currPlayer == nick)
+            end = true;
+        else if (currPlayer == nick)
+            sendMessage("Vous n'avez pas pioché, " + players->getPlayer(currPlayer)->getColoredName());
+        else
+            sendMessage("C'est au tour de " + players->getPlayer(currPlayer)->getColoredName() + ", " + (players->contains(nick) ? players->getPlayer(nick)->getColoredName() : "\x02" + nick));
+    }
+    else if (cmd == "main")
+    {
+        if (!isOp(nick) && !args.isEmpty())
+            sendMessage("Vous n'avez pas le droit de voir les cartes des autres joueurs, " + (players->contains(nick) ? players->getPlayer(nick)->getColoredName() : "\x02" + nick));
+        else if (args.isEmpty())
+        {
+            sendMessage("Carte visible : " + lastCard->toString());
+            sendMessage("C'est au tour de " + players->getPlayer(currPlayer)->getColoredName());
+            if (players->contains(nick)) showCards(nick);
+        }
+        else if (isOp(nick))
+        {
+            if (players->contains(args.at(0)))
+                showCards(args.at(0), nick);
+            else
+                sendMessage("Impossible de trouver ""\x02" + args.at(0) + ", " + (players->contains(nick) ? players->getPlayer(nick)->getColoredName() : "\x02" + nick));
+        }
+    }
+    else if (cmd == "cartes")
+    {
+        sendMessage("Il reste " + QString::number(cards->size()) + " cartes à piocher");
+    }
+    else if (cmd == "j")
+    {
+        Player *curr = players->getPlayer(currPlayer);
+        if (currPlayer != nick)
+            return;
+        else if (args.size() < 2)
+            sendMessage("\"!aide j\" pour savoir utiliser !j");
+        else if (curr->getDeck()->contains(new Card(args.at(0), args.at(1))) || curr->getDeck()->contains(new Card("N", args.at(1))))
+        {
+            QString color = QString(args.at(0)).toUpper(), id = QString(args.at(1)).toUpper();
+            if (lastCard->getColor() == color || lastCard->getId() == id || lastCard->getColor() == "N" || id == "J" || id == "+4")
+            {
+                if (color == "R" || color == "V" || color == "B" || color == "J")
+                {
+                    if (id == "J")
+                    {
+                        lastCard = new Card(color, id);
+                        curr->getDeck()->remCard("N", id);
+                        end = true;
+                    }
+                    else if (id == "+4")
+                    {
+                        if (cards->size() >= 4)
+                        {
+                            if (curr->getDeck()->containsId((lastCard->getId() == "+4" ? "" : lastCard->getId())) || curr->getDeck()->containsColor(lastCard->getColor()))
+                                sendMessage("Vous ne pouvez pas jouer un " + Card("N", "+4").toString() + " si vous pouvez jouer une autre carte, " + curr->getColoredName());
+                            else
+                            {
+                                lastCard = new Card(color, id);
+                                curr->getDeck()->remCard("N", id);
+                                Player *next = players->getPlayer(nextPlayer());
+                                sendMessage(next->getColoredName() + " pioche 4 cartes");
+                                sendCommand(IrcCommand::createNotice(next->getName(), next->getDeck()->randCards(4)));
+                                next->cantPlay();
+                                end = true;
+                            }
+                        }
+                        else
+                            sendMessage("Vous ne pouvez pas jouer cette carte, il ne reste que " + QString::number(cards->size()) + " cartes dans la pioche, " + curr->getColoredName());
+                    }
+                    else if (id == "+2")
+                    {
+                        if (cards->size() >= 2)
+                        {
+                            Player *next = players->getPlayer(nextPlayer());
+                            sendMessage(next->getColoredName() + " pioche 2 cartes");
+                            sendCommand(IrcCommand::createNotice(next->getName(), next->getDeck()->randCards(2)));
+                            next->cantPlay();
+                            lastCard = new Card(color, id);
+                            curr->getDeck()->remCard(color, id);
+                            end = true;
+                        }
+                        else
+                            sendMessage("Vous ne pouvez pas jouer cette carte, il ne reste que " + QString::number(cards->size()) + " cartes dans la pioche, " + curr->getColoredName());
+                    }
+                    else if (id == "I")
+                    {
+                        if (players->size() == 2)
+                            players->getPlayer(nextPlayer())->cantPlay();
+                        else
+                        {
+                            sendMessage("Le sens de jeu est ""\x16""inversé");
+                            inversed = !inversed;
+                        }
+                        lastCard = new Card(color, id);
+                        curr->getDeck()->remCard(color, id);
+                        end = true;
+                    }
+                    else if (id == "P")
+                    {
+                        players->getPlayer(nextPlayer())->cantPlay();
+                        lastCard = new Card(color, id);
+                        curr->getDeck()->remCard(color, id);
+                        end = true;
+                    }
+                    else
+                    {
+                        lastCard = new Card(color, id);
+                        curr->getDeck()->remCard(color, id);
+                        end = true;
+                    }
+                }
+                else
+                    sendMessage("Cette couleur n'existe pas, " + curr->getColoredName());
+            }
+            else
+                sendMessage("Vous ne pouvez pas jouer cette carte, " + curr->getColoredName());
+        }
+        else
+        {
+            sendMessage("Vous n'avez pas cette carte ou elle n'existe pas, " + curr->getColoredName());
+        }
+    }
+
+    if (end && cards->isEmpty())
+    {
+        sendMessage("La pioche est vide");
+        Player *winner = players->getPlayer(currPlayer);
+        int minCards = 100;
+        foreach (Player *w, players->getList())
+        {
+            if (w->getDeck()->size() < minCards)
+            {
+                minCards = w->getDeck()->size();
+                winner = w;
+            }
+        }
+        sendMessage(winner->getColoredName() + " a gagné !");
+        clear();
+        return;
+    }
+    else if (end && players->getPlayer(currPlayer)->getDeck()->size() == 1)
+        sendMessage(players->getPlayer(currPlayer)->getColoredName() + " est en ""\x02""UNO""\x0F"" !");
+    else if (end && players->getPlayer(currPlayer)->getDeck()->size() == 0)
+    {
+        sendMessage(players->getPlayer(currPlayer)->getColoredName() + " a gagné !");
+        clear();
+        return;
+    }
+
+    if (end)
+    {
+        currPlayer = nextPlayer();
+        drawed = false;
+        if (!players->getPlayer(currPlayer)->canPlay())
+        {
+            sendMessage(players->getPlayer(currPlayer)->getColoredName() + " passe son tour");
+            sendCommand(IrcCommand::createMessage(chan, " "));
+            sendMessage("Carte visible : " + lastCard->toString());
+            currPlayer = nextPlayer();
+            sendMessage("C'est au tour de " + players->getPlayer(currPlayer)->getColoredName());
+            showCards();
+        }
+        else
+        {
+            sendCommand(IrcCommand::createMessage(chan, " "));
+            sendMessage("Carte visible : " + lastCard->toString());
+            sendMessage("C'est au tour de " + players->getPlayer(currPlayer)->getColoredName());
+            showCards();
+        }
     }
 }
 

@@ -10,6 +10,7 @@ class Deck : public QObject
     Q_OBJECT
 public:
     explicit Deck(Echos *_parent);
+    void init();
     QString randCards(int _count);
     void remCard(QString _color, QString _id);
     bool contains(Card *_card) const;

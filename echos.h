@@ -5,6 +5,7 @@
 #include <QTextCodec>
 #include <IrcConnection>
 #include <IrcCommand>
+#include <QSettings>
 #include "cards.h"
 #include "players.h"
 
@@ -30,11 +31,10 @@ public slots:
     void onQuit(IrcQuitMessage *message);
 
 private:
-    void showCards(QString nick = QString());
+    void showCards(QString nick = QString(), QString to = QString());
     QString nextPlayer();
     void remPlayer(QString nick);
     void clear();
-    void sendMessageIG(QString message);
     void sendMessage(QString message);
     void command(QString nick, QString cmd, QStringList args);
     bool isOp(QString user);
@@ -50,6 +50,7 @@ private:
     QHash<QString,QString> modes;
     bool inGame, preGame, drawed, inversed, inPing;
     unsigned int pingTimeBegin, pingTime, pingCount;
+    QSettings* slaps;
 };
 
 #endif // ECHOS_H

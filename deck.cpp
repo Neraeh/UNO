@@ -3,6 +3,10 @@
 Deck::Deck(Echos *_parent) : QObject(_parent)
 {
     parent = _parent;
+}
+
+void Deck::init()
+{
     while (cards.size() < 7)
     {
         QTime time = QTime::currentTime();
@@ -18,11 +22,10 @@ QString Deck::randCards(int _count)
     QString newCards = "+ ";
     for (int i = 0; i < _count; i++)
     {
-        QTime time = QTime::currentTime();
-        qsrand((uint)time.msec());
+        qsrand((uint)QTime::currentTime().msec());
         int rand = qrand() % parent->getCards()->size();
         cards.append(parent->getCards()->get(rand));
-        newCards += parent->getCards()->get(rand)->toString();
+        newCards += parent->getCards()->get(rand)->toString() + " ";
         parent->getCards()->remove(rand);
     }
     return newCards;
@@ -32,7 +35,7 @@ void Deck::remCard(QString _color, QString _id)
 {
     foreach (Card* w, cards)
     {
-        if (w == new Card(_color, _id))
+        if (w->getColor() == _color && w->getId() == _id)
         {
             cards.removeOne(w);
             return;
@@ -43,7 +46,7 @@ void Deck::remCard(QString _color, QString _id)
 bool Deck::contains(Card* _card) const
 {
     foreach (Card* w, cards)
-        if (w == _card)
+        if (w->getId() == _card->getId() && w->getColor() == _card->getColor())
             return true;
     return false;
 }

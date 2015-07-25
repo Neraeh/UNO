@@ -35,3 +35,6 @@ HEADERS += \
     player.h
 
 include(/home/shayy/Dev/libcommuni/src/src.pri)
+
+RESOURCES += \
+    rc.qrc

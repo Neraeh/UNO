@@ -1,17 +1,17 @@
 (-- = fait)
 -- !ping
 -- !version
-!slaps
+-- !slaps
 -- !regles
 -- !liste
 -- !quitter
 -- !uno
 -- !rejoindre
 -- !commencer
-!j
-!pioche
-!fin
-!main (+ !main [pseudo] pour les OP)
-!cartes
+-- !j
+-- !pioche
+-- !fin
+-- !main (+ !main [pseudo] pour les OP)
+-- !cartes
 !color
 !nocolor
