@@ -78,11 +78,6 @@ int Players::size() const
     return players.size();
 }
 
-bool Players::isEmpty() const
-{
-    return players.size() - 1 == 0 ? true : false;
-}
-
 bool Players::isInversed() const
 {
     return inversed;

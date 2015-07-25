@@ -34,4 +34,4 @@ HEADERS += \
     players.h \
     player.h
 
-include(/home/shayy/Dev/libcommuni/src/src.pri)
+include(D:\Dev\src\libcommuni\src\src.pri)

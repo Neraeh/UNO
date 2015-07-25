@@ -34,6 +34,7 @@ private:
     QString nextPlayer();
     void remPlayer(QString nick);
     void clear();
+    void sendMessageIG(QString message);
     void sendMessage(QString message);
     void command(QString nick, QString cmd, QStringList args);
     bool isOp(QString user);
