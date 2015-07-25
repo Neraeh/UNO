@@ -128,7 +128,7 @@ void Echos::onNotice(IrcNoticeMessage *message)
                 green.append(" ");
             while (red.length() + green.length() < 49)
                 red.append(" ");
-            sendMessage("\x03""01,03" + green + "\x03""01,04" + red + "\x0F"" ""\x02" + currPing + "\x0F"": " + QString::number(pingTime) + "ms");
+            sendMessage("\x03""01,03" + green + "\x03""01,04" + red + "\x0F"" " + currPing + ": " + QString::number(pingTime) + "ms");
             currPing = "";
             pingTime = 10000000;
             pingCount = 0;
@@ -178,21 +178,21 @@ void Echos::remPlayer(QString nick)
 {
     if (players->contains(nick))
     {
-        sendMessageIG(players->getPlayer(nick)->getColoredName() + " a quitté la partie");
+        sendMessage(players->getPlayer(nick)->getColoredName() + " a quitté la partie");
 
         if (players->size() == 1 && inGame)
         {
-            sendMessageIG(players->getPlayer(players->first())->getColoredName() + " a gagné la partie !");
+            sendMessage(players->getPlayer(players->first())->getColoredName() + " a gagné la partie !");
             clear();
         }
-        else if (nick == currPlayer)
+        else if (nick == currPlayer && inGame)
         {
             currPlayer = nextPlayer();
-            sendMessageIG("C'est donc au tour de " + players->getPlayer(currPlayer)->getColoredName());
+            sendMessage("C'est donc au tour de " + players->getPlayer(currPlayer)->getColoredName());
         }
-        else if (players->size() == 0 && preGame)
+        else if (players->isEmpty() && preGame)
         {
-            sendMessageIG("Plus aucun joueur, la préparation de la partie est annulée");
+            sendMessage("Plus aucun joueur, la préparation de la partie est annulée");
             clear();
         }
 
@@ -212,17 +212,11 @@ void Echos::clear()
     cards = new Cards();
 }
 
-void Echos::sendMessageIG(QString message)
-{
-    if (inGame || preGame)
-        sendMessage("\x03""01,15[""\x02""\x03""04,15UNO""\x0F""\x03""01,15]""\x02""\x03""00,14 " + message + " ");
-    else
-        sendMessage(message);
-}
-
 void Echos::sendMessage(QString message)
 {
-    sendCommand(IrcCommand::createMessage(chan, message));
+    message.replace("\x02", "\x03""04,15");
+    message.replace("\x0F", "\x03""00,14");
+    sendCommand(IrcCommand::createMessage(chan, "\x03""01,15[""\x02""\x03""04,15UNO""\x0F""\x03""01,15]""\x02""\x03""00,14 " + message + " "));
 }
 
 void Echos::command(QString nick, QString cmd, QStringList args)
@@ -331,11 +325,11 @@ void Echos::command(QString nick, QString cmd, QStringList args)
             {
                 Player *p = new Player(nick, this);
                 players->add(p);
-                sendMessageIG(p->getColoredName() + " a rejoint la partie");
-                sendMessageIG("Il y a " + QString::number(players->size()) + " joueurs dans la partie");
+                sendMessage(p->getColoredName() + " a rejoint la partie");
+                sendMessage("Il y a " + QString::number(players->size()) + " joueurs dans la partie");
             }
             else
-                sendMessageIG("Vous êtes déjà dans la partie, " + players->getPlayer(nick)->getColoredName());
+                sendMessage("Vous êtes déjà dans la partie, " + players->getPlayer(nick)->getColoredName());
         }
         else if (inGame)
             sendMessage("Impossible de rejoindre une partie en cours de jeu, ""\x02" + nick);
@@ -354,27 +348,27 @@ void Echos::command(QString nick, QString cmd, QStringList args)
             do { rand = qrand() % cards->size() - 1; } while (cards->get(rand) == new Card("N", "+4"));
             lastCard = cards->get(rand);
             cards->remove(rand);
-            sendMessageIG("Carte visible : " + lastCard->toString());
+            sendMessage("Carte visible : " + lastCard->toString());
             currPlayer = players->rand()->getName();
 
             if (lastCard->getId() == "+2")
             {
                 sendCommand(IrcCommand::createNotice(currPlayer, players->getPlayer(currPlayer)->getDeck()->randCards(2)));
-                sendMessageIG(players->getPlayer(currPlayer)->getName() + " passe son tour");
+                sendMessage(players->getPlayer(currPlayer)->getName() + " passe son tour");
                 currPlayer = nextPlayer();
             }
             else if (lastCard->getId() == "I")
             {
-                sendMessageIG("Le sens de jeu est ""\x16""inversé");
+                sendMessage("Le sens de jeu est ""\x16""inversé");
                 inversed = true;
             }
             else if (lastCard->getId() == "P")
             {
-                sendMessageIG(players->getPlayer(currPlayer)->getName() + " passe son tour");
+                sendMessage(players->getPlayer(currPlayer)->getName() + " passe son tour");
                 currPlayer = nextPlayer();
             }
 
-            sendMessageIG("C'est au tour de " + players->getPlayer(currPlayer)->getName());
+            sendMessage("C'est au tour de " + players->getPlayer(currPlayer)->getName());
 
             foreach (Player *w, players->getList())
                 sendCommand(IrcCommand::createNotice(w->getName(), w->getDeck()->toString()));
@@ -395,9 +389,9 @@ void Echos::command(QString nick, QString cmd, QStringList args)
             preGame = true;
             Player *p = new Player(nick, this);
             players->add(p);
-            sendMessageIG(p->getColoredName() + " a créé une nouvelle partie");
-            sendMessageIG(p->getColoredName() + " a rejoint la partie");
-            sendMessageIG(p->getColoredName() + "Il y a 1 joueur dans la partie");
+            sendMessage(p->getColoredName() + " a créé une nouvelle partie");
+            sendMessage(p->getColoredName() + " a rejoint la partie");
+            sendMessage("Il y a 1 joueur dans la partie");
         }
         else if (inGame)
             sendMessage("Une partie est déjà en cours, " + (players->contains(nick) ? players->getPlayer(nick)->getColoredName() : "\x02" + nick));

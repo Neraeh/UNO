@@ -20,6 +20,7 @@ public:
     Player* getPlayer(QString _name) const;
     int indexOf(QString _name) const;
     int size() const;
+    bool isEmpty() const;
     bool isInversed() const;
     void clear();
     QList<Player*> getList() const;
