@@ -2,12 +2,11 @@
 
 Echos::Echos(QCoreApplication *_parent) : IrcConnection(_parent)
 {
-    parent = _parent;
     chan = "#dev";
     cards = new Cards;
     players = new Players;
     lastCard = new Card("", "");
-    inGame = false, preGame = false, drawed = false, inversed = false, inPing = false;
+    inGame = false, preGame = false, drawed = false, inversed = false, inPing = false, inVersion = false;
 
     slaps = new QSettings(":/slaps/slaps.ini", QSettings::IniFormat);
     slaps->setIniCodec("UTF-8");
@@ -41,6 +40,11 @@ Echos::~Echos()
         quit("Closed");
         close();
     }
+    slaps->sync();
+    delete cards;
+    delete players;
+    delete lastCard;
+    delete slaps;
 }
 
 void Echos::onConnect()
@@ -94,6 +98,8 @@ void Echos::onNames(IrcNamesMessage *message)
 void Echos::onNick(IrcNickMessage *message)
 {
     sendCommand(IrcCommand::createMessage("NickServ", "STATUS " + message->newNick()));
+    modes.insert(message->newNick(), modes.value(message->oldNick()));
+    modes.remove(message->oldNick());
     if ((inGame || preGame) && players->contains(message->oldNick()))
     {
         Player *player = players->getPlayer(message->oldNick());
@@ -110,7 +116,10 @@ void Echos::onNotice(IrcNoticeMessage *message)
     if (message->content().split(" ").size() > 3 && message->nick() == "NickServ" && message->content().startsWith("STATUS") && (message->content().split(" ").at(3) == "Shayy" || message->content().split(" ").at(3) == "TuxAnge" || message->content().split(" ").at(3) == "Feeling"))
         sendCommand(IrcCommand::createMode(chan, "+o", message->content().split(" ").at(3)));
     else if (message->content().startsWith("VERSION"))
-        sendMessage("\x02" + message->nick() + "\x0F"" utilise:" + message->content().mid(message->content().indexOf(" ")));
+    {
+        sendCommand(IrcCommand::createMessage(chan, "\x02" + message->nick() + "\x0F"" utilise:" + message->content().mid(message->content().indexOf(" "))));
+        inVersion = false;
+    }
     else if (message->nick() == currPing && inPing)
     {
         if (QTime::currentTime().msecsSinceStartOfDay() - pingTimeBegin < pingTime)
@@ -131,7 +140,7 @@ void Echos::onNotice(IrcNoticeMessage *message)
                 green.append(" ");
             while (red.length() + green.length() < 49)
                 red.append(" ");
-            sendMessage("\x03""01,03" + green + "\x03""01,04" + red + "\x0F"" " + currPing + ": " + QString::number(pingTime) + "ms");
+            sendCommand(IrcCommand::createMessage(chan, "\x03""01,03" + green + "\x03""01,04" + red + "\x0F"" ""\x02" + currPing + "\x0F"": " + QString::number(pingTime) + "ms"));
             currPing = "";
             pingTime = 10000000;
             pingCount = 0;
@@ -152,6 +161,22 @@ void Echos::onQuit(IrcQuitMessage *message)
     modes.remove(message->nick());
 }
 
+void Echos::pingTimeout()
+{
+    if (!inPing)
+        return;
+    sendCommand(IrcCommand::createMessage(chan, "\x02" + currPing + "\x0F"" a dépassé le délai autorisé"));
+    inPing = false;
+}
+
+void Echos::versionTimeout(QString nick)
+{
+    if (!inVersion)
+        return;
+    sendCommand(IrcCommand::createMessage(chan, "\x02" + nick + "\x0F"" a dépassé le délai autorisé"));
+    inVersion = false;
+}
+
 void Echos::showCards(QString nick, QString to)
 {
     if (nick.isEmpty())
@@ -163,7 +188,6 @@ void Echos::showCards(QString nick, QString to)
 
 QString Echos::nextPlayer()
 {
-    qDebug() << inversed << (turns.indexOf(currPlayer) + (inversed ? -1 : 1) > turns.size() -1) << (turns.indexOf(currPlayer) + (inversed ? -1 : 1) < 0);
     if (turns.indexOf(currPlayer) + (inversed ? -1 : 1) > turns.size() -1 || turns.indexOf(currPlayer) + (inversed ? -1 : 1) < 0)
         return inversed ? turns.last() : turns.first();
     else
@@ -291,18 +315,23 @@ void Echos::command(QString nick, QString cmd, QStringList args)
         else if (args.first() == "slaps")
             command(nickName(), "slaps", QStringList() << nick);
         else
-            sendMessage("Cette commande n'existe pas, " + (players->contains(nick) ? players->getPlayer(nick)->getColoredName() : "\x02" + nick));
+            sendMessage("Cette commande n'existe pas, " + (players->contains(nick) ? players->getPlayer(nick)->getColoredName() : "\x02" + nick + "\x0F"));
     }
     else if (cmd == "regles" || cmd == "rules")
         sendMessage("\x02""Règles :""\x0F"" http://tuxange.org/unorules/");
     else if (cmd == "version")
     {
         if (args.isEmpty())
-            sendCommand(IrcCommand::createVersion(nick));
-        else if (modes.contains(args.first()))
+            args.append(nick);
+
+        if (modes.contains(args.first()))
+        {
             sendCommand(IrcCommand::createVersion(args.first()));
+            QTimer::singleShot(20000, this, SLOT(versionTimeout(nick)));
+            inVersion = true;
+        }
         else
-            sendMessage("\x02" + args.first() + "\x0F"" n'a pas été trouvé");
+            sendCommand(IrcCommand::createMessage(chan, "\x02" + args.first() + "\x0F"" n'a pas été trouvé"));
     }
     else if (cmd == "slaps")
     {
@@ -313,7 +342,7 @@ void Echos::command(QString nick, QString cmd, QStringList args)
     }
     else if (cmd == "ping")
     {
-        if (currPing == "" || QTime::currentTime().msecsSinceStartOfDay() - pingTimeBegin > 20000)
+        if (!inPing)
         {
             pingTime = 1000000;
             pingCount = 0;
@@ -321,20 +350,26 @@ void Echos::command(QString nick, QString cmd, QStringList args)
             currPing = nick;
             pingTimeBegin = QTime::currentTime().msecsSinceStartOfDay();
             sendCommand(IrcCommand::createCtcpRequest(nick, "PING " + QString::number(pingTimeBegin)));
+            QTimer::singleShot(20000, this, SLOT(pingTimeout()));
         }
         else
-            sendMessage("Un ping est déjà en cours, " + (players->contains(nick) ? players->getPlayer(nick)->getColoredName() : "\x02" + nick));
+            sendCommand(IrcCommand::createMessage(chan, "Un ping est déjà en cours, " + (players->contains(nick) ? players->getPlayer(nick)->getColoredName() : "\x02" + nick)));
     }
     else if (cmd == "liste" || cmd == "list")
     {
         if (inGame || preGame)
             sendMessage("Dans la partie: " + players->list());
         else
-            sendMessage("Il n'y a pas de partie en cours, ""\x02" + nick);
+            sendMessage("Il n'y a pas de partie en cours, ""\x02" + nick + "\x0F");
     }
     else if (cmd == "quitter")
     {
-        remPlayer(nick);
+        if (players->contains(nick))
+            remPlayer(nick);
+        else if (!inGame)
+            sendMessage("Il n'y a pas de partie en cours, ""\x02" + nick + "\x0F");
+        else
+            sendMessage("Vous n'êtes pas dans cette partie, ""\x02" + nick + "\x0F");
     }
     else if (cmd == "rejoindre")
     {
@@ -352,14 +387,14 @@ void Echos::command(QString nick, QString cmd, QStringList args)
                 sendMessage("Vous êtes déjà dans la partie, " + players->getPlayer(nick)->getColoredName());
         }
         else if (inGame)
-            sendMessage("Impossible de rejoindre une partie en cours de jeu, ""\x02" + nick);
+            sendMessage("Impossible de rejoindre une partie en cours de jeu, ""\x02" + nick + "\x0F");
         else
-            sendMessage("Il n'y a pas de partie en préparation, ""\x02" + nick);
+            sendMessage("Il n'y a pas de partie en préparation, ""\x02" + nick + "\x0F");
     }
     else if (cmd == "commencer")
     {
         if (!players->contains(nick) && preGame)
-            sendMessage("Vous n'êtes pas dans cette partie, ""\x02" + nick);
+            sendMessage("Vous n'êtes pas dans cette partie, ""\x02" + nick + "\x0F");
         else if (players->size() > 1 && preGame)
         {;
             QTime time = QTime::currentTime();
@@ -405,7 +440,7 @@ void Echos::command(QString nick, QString cmd, QStringList args)
         else if (inGame)
             sendMessage("Une partie est déjà en cours, " + (players->contains(nick) ? players->getPlayer(nick)->getColoredName() : "\x02" + nick));
         else
-            sendMessage("Il n'y a pas de partie en préparation, ""\x02" + nick);
+            sendMessage("Il n'y a pas de partie en préparation, ""\x02" + nick + "\x0F");
     }
     else if (cmd == "uno")
     {
@@ -420,13 +455,15 @@ void Echos::command(QString nick, QString cmd, QStringList args)
             sendMessage("Il y a 1 joueur dans la partie");
         }
         else if (inGame)
-            sendMessage("Une partie est déjà en cours, " + (players->contains(nick) ? players->getPlayer(nick)->getColoredName() : "\x02" + nick));
+            sendMessage("Une partie est déjà en cours, " + (players->contains(nick) ? players->getPlayer(nick)->getColoredName() : "\x02" + nick + "\x0F"));
         else // preGame
-            sendMessage("Une partie est déjà en préparation, " + (players->contains(nick) ? players->getPlayer(nick)->getColoredName() : "\x02" + nick));
+            sendMessage("Une partie est déjà en préparation, " + (players->contains(nick) ? players->getPlayer(nick)->getColoredName() : "\x02" + nick + "\x0F"));
     }
     else if (cmd == "pioche")
     {
-        if (!drawed && currPlayer == nick)
+        if (!inGame)
+            sendMessage("Il n'y a pas de partie en cours, ""\x02" + nick + "\x0F");
+        else if (!drawed && currPlayer == nick)
         {
             sendCommand(IrcCommand::createNotice(currPlayer, players->getPlayer(currPlayer)->getDeck()->randCards(1)));
             sendMessage("Carte visible : " + lastCard->toString());
@@ -435,21 +472,25 @@ void Echos::command(QString nick, QString cmd, QStringList args)
         else if (currPlayer == nick)
             sendMessage("Vous avez déjà pioché, " + players->getPlayer(nick)->getColoredName());
         else
-            sendMessage("C'est au tour de " + players->getPlayer(currPlayer)->getColoredName() + ", " + (players->contains(nick) ? players->getPlayer(nick)->getColoredName() : "\x02" + nick));
+            sendMessage("C'est au tour de " + players->getPlayer(currPlayer)->getColoredName());
     }
     else if (cmd == "fin" || cmd == "f")
     {
-        if (drawed && currPlayer == nick)
+        if (!inGame)
+            sendMessage("Il n'y a pas de partie en cours, ""\x02" + nick + "\x0F");
+        else if (drawed && currPlayer == nick)
             end = true;
         else if (currPlayer == nick)
             sendMessage("Vous n'avez pas pioché, " + players->getPlayer(currPlayer)->getColoredName());
         else
-            sendMessage("C'est au tour de " + players->getPlayer(currPlayer)->getColoredName() + ", " + (players->contains(nick) ? players->getPlayer(nick)->getColoredName() : "\x02" + nick));
+            sendMessage("C'est au tour de " + players->getPlayer(currPlayer)->getColoredName());
     }
     else if (cmd == "main")
     {
-        if (!isOp(nick) && !args.isEmpty())
-            sendMessage("Vous n'avez pas le droit de voir les cartes des autres joueurs, " + (players->contains(nick) ? players->getPlayer(nick)->getColoredName() : "\x02" + nick));
+        if (!inGame)
+            sendMessage("Il n'y a pas de partie en cours, ""\x02" + nick + "\x0F");
+        else if (!isOp(nick) && !args.isEmpty())
+            sendMessage("Vous n'avez pas le droit de voir les cartes des autres joueurs, " + (players->contains(nick) ? players->getPlayer(nick)->getColoredName() : "\x02" + nick + "\x0F"));
         else if (args.isEmpty())
         {
             sendMessage("Carte visible : " + lastCard->toString());
@@ -461,18 +502,23 @@ void Echos::command(QString nick, QString cmd, QStringList args)
             if (players->contains(args.at(0)))
                 showCards(args.at(0), nick);
             else
-                sendMessage("Impossible de trouver ""\x02" + args.at(0) + ", " + (players->contains(nick) ? players->getPlayer(nick)->getColoredName() : "\x02" + nick));
+                sendMessage("Impossible de trouver ""\x02" + args.at(0) + ", " + (players->contains(nick) ? players->getPlayer(nick)->getColoredName() : "\x02" + nick + "\x0F"));
         }
     }
     else if (cmd == "cartes")
     {
-        sendMessage("Il reste " + QString::number(cards->size()) + " cartes à piocher");
+        if (!inGame)
+            sendMessage("Il n'y a pas de partie en cours, ""\x02" + nick + "\x0F");
+        else
+            sendMessage("Il reste " + QString::number(cards->size()) + " cartes à piocher");
     }
     else if (cmd == "j")
     {
         Player *curr = players->getPlayer(currPlayer);
-        if (currPlayer != nick)
-            return;
+        if (!inGame)
+            sendMessage("Il n'y a pas de partie en cours, ""\x02" + nick + "\x0F");
+        else if (currPlayer != nick)
+            sendMessage("C'est au tour de " + curr->getColoredName());
         else if (args.size() < 2)
             sendMessage("\"!aide j\" pour savoir utiliser !j");
         else if (curr->getDeck()->contains(new Card(args.at(0), args.at(1))) || curr->getDeck()->contains(new Card("N", args.at(1))))
@@ -580,7 +626,7 @@ void Echos::command(QString nick, QString cmd, QStringList args)
         return;
     }
     else if (end && players->getPlayer(currPlayer)->getDeck()->size() == 1)
-        sendMessage(players->getPlayer(currPlayer)->getColoredName() + " est en ""\x02""UNO""\x0F"" !");
+        sendMessage(players->getPlayer(currPlayer)->getColoredName() + " ""\x16""est en ""\x03""01,15[""\x02""\x03""04,15UNO""\x0F""\x03""01,15]""\x02""\x03""00,14""\x16"" !");
     else if (end && players->getPlayer(currPlayer)->getDeck()->size() == 0)
     {
         sendMessage(players->getPlayer(currPlayer)->getColoredName() + " a gagné !");

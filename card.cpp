@@ -31,7 +31,7 @@ QString Card::toString() const
     if (color == "R")
         card += ",04";
     else if (color == "B")
-        card += ",02";
+        card += ",11";
     else if (color == "J")
         card += ",08";
     else if (color == "V")

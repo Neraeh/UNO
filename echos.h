@@ -6,6 +6,7 @@
 #include <IrcConnection>
 #include <IrcCommand>
 #include <QSettings>
+#include <QTimer>
 #include "cards.h"
 #include "players.h"
 
@@ -30,6 +31,10 @@ public slots:
     void onPart(IrcPartMessage *message);
     void onQuit(IrcQuitMessage *message);
 
+private slots:
+    void pingTimeout();
+    void versionTimeout(QString nick);
+
 private:
     void showCards(QString nick = QString(), QString to = QString());
     QString nextPlayer();
@@ -41,14 +46,13 @@ private:
     bool startsWithMode(QString nick);
 
 private:
-    QCoreApplication* parent;
     Cards *cards;
     Players *players;
     QList<QString> turns;
     Card *lastCard;
     QString currPlayer, currPing, chan;
     QHash<QString,QString> modes;
-    bool inGame, preGame, drawed, inversed, inPing;
+    bool inGame, preGame, drawed, inversed, inPing, inVersion;
     unsigned int pingTimeBegin, pingTime, pingCount;
     QSettings* slaps;
 };
