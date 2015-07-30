@@ -11,7 +11,7 @@ Echos::Echos(QCoreApplication *_parent) : IrcConnection(_parent)
     slaps = new QSettings(":/slaps/slaps.ini", QSettings::IniFormat);
     slaps->setIniCodec("UTF-8");
 
-    qputenv("IRC_DEBUG", "1");
+    // qputenv("IRC_DEBUG", "1");
 
     setServers(QStringList("irc.t411.io"));
     setEncoding("UTF-8");

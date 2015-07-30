@@ -12,7 +12,7 @@ TARGET = EchosCpp
 CONFIG   += console
 CONFIG   -= app_bundle
 
-QMAKE_CFLAGS_RELEASE += -O2 -pipe
+QMAKE_CFLAGS_RELEASE += -O3 -pipe
 QMAKE_CXXFLAGS_RELEASE += $$QMAKE_CFLAGS_RELEASE
 QMAKE_LFLAGS_RELEASE += -s
 
@@ -34,7 +34,7 @@ HEADERS += \
     players.h \
     player.h
 
-include(/home/shayy/Dev/libcommuni/src/src.pri)
+include(C:\Users\drask\Documents\Dev\libcommuni\src\src.pri)
 
 RESOURCES += \
     rc.qrc
