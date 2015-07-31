@@ -4,7 +4,8 @@ UNO IRC bot
 
 ## Utilisation
 Qt en version 4.6 minimum est indispensable pour la compilation et l'utilisation
-```$ git clone https://github.com/TheShayy/UNO.git && cd UNO
+```
+$ git clone https://github.com/TheShayy/UNO.git && cd UNO
 $ qmake
 $ make
 ```
