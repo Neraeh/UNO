@@ -8,7 +8,7 @@ QT       += core network
 
 QT       -= gui
 
-TARGET = EchosCpp
+TARGET = UNO
 CONFIG   += console
 CONFIG   -= app_bundle
 
@@ -19,7 +19,7 @@ QMAKE_LFLAGS_RELEASE += -s
 TEMPLATE = app
 
 SOURCES += main.cpp \
-    echos.cpp \
+    uno.cpp \
     card.cpp \
     cards.cpp \
     deck.cpp \
@@ -27,14 +27,11 @@ SOURCES += main.cpp \
     player.cpp
 
 HEADERS += \
-    echos.h \
+    uno.h \
     card.h \
     cards.h \
     deck.h \
     players.h \
     player.h
 
-include(C:\Users\drask\Documents\Dev\libcommuni\src\src.pri)
-
-RESOURCES += \
-    rc.qrc
+include($$_PRO_FILE_PWD_/../libcommuni/src/src.pri)

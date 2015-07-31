@@ -1,15 +1,15 @@
 #ifndef DECK_H
 #define DECK_H
 
-#include "echos.h"
+#include "uno.h"
 #include "card.h"
 
-class Echos;
+class UNO;
 class Deck : public QObject
 {
     Q_OBJECT
 public:
-    explicit Deck(Echos *_parent);
+    explicit Deck(UNO *_parent);
     void init();
     QString randCards(int _count);
     void remCard(QString _color, QString _id);
@@ -21,7 +21,7 @@ public:
     QString toString() const;
 
 private:
-    Echos *parent;
+    UNO *parent;
     QList<Card*> cards;
 };
 

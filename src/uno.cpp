@@ -1,6 +1,6 @@
-#include "echos.h"
+#include "uno.h"
 
-Echos::Echos(QCoreApplication *_parent) : IrcConnection(_parent)
+UNO::UNO(QCoreApplication *_parent) : IrcConnection(_parent)
 {
     chan = "#dev";
     cards = new Cards;
@@ -8,16 +8,19 @@ Echos::Echos(QCoreApplication *_parent) : IrcConnection(_parent)
     lastCard = new Card("", "");
     inGame = false, preGame = false, drawed = false, inversed = false, inPing = false, inVersion = false;
 
-    slaps = new QSettings(":/slaps/slaps.ini", QSettings::IniFormat);
+    settings = new QSettings(qApp->applicationDirPath() + "/UNO/settings.ini", QSettings::IniFormat);
+    settings->setIniCodec("UTF-8");
+
+    slaps = new QSettings(qApp->applicationDirPath() + "/UNO/slaps.ini", QSettings::IniFormat);
     slaps->setIniCodec("UTF-8");
 
-    // qputenv("IRC_DEBUG", "1");
+    qputenv("IRC_DEBUG", settings->value("debug", "0").toByteArray());
 
-    setServers(QStringList("irc.t411.io"));
-    setEncoding("UTF-8");
-    setUserName("EchosTest");
-    setNickName("EchosTest");
-    setRealName("Echos");
+    setServers(QStringList(settings->value("server", "irc.t411.io").toString()));
+    setEncoding(settings->value("encoding", "UTF-8").toByteArray());
+    setUserName(settings->value("username", "UNO").toString());
+    setNickName(settings->value("nickname", "UNO").toString());
+    setRealName(settings->value("realname", "UNO").toString());
     setReconnectDelay(5);
     open();
 
@@ -33,27 +36,30 @@ Echos::Echos(QCoreApplication *_parent) : IrcConnection(_parent)
     QObject::connect(this, SIGNAL(quitMessageReceived(IrcQuitMessage*)), this, SLOT(onQuit(IrcQuitMessage*)));
 }
 
-Echos::~Echos()
+UNO::~UNO()
 {
     if (isActive())
     {
         quit("Closed");
         close();
     }
+    settings->sync();
     slaps->sync();
     delete cards;
     delete players;
     delete lastCard;
+    delete settings;
     delete slaps;
 }
 
-void Echos::onConnect()
+void UNO::onConnect()
 {
-    sendCommand(IrcCommand::createMessage("NickServ", "IDENTIFY GC1066echos&"));
+    if (!settings->value("nspassword", QString()).toString().isEmpty())
+        sendCommand(IrcCommand::createMessage("NickServ", "IDENTIFY " + settings->value("nspassword").toString()));
     sendCommand(IrcCommand::createJoin(chan));
 }
 
-void Echos::onMessage(IrcPrivateMessage *message)
+void UNO::onMessage(IrcPrivateMessage *message)
 {
     if (message->target() == nickName() || message->isOwn())
         return;
@@ -65,7 +71,7 @@ void Echos::onMessage(IrcPrivateMessage *message)
     }
 }
 
-void Echos::onJoin(IrcJoinMessage *message)
+void UNO::onJoin(IrcJoinMessage *message)
 {
     sendCommand(IrcCommand::createMessage("NickServ", "STATUS " + message->nick()));
     if (preGame)
@@ -74,7 +80,7 @@ void Echos::onJoin(IrcJoinMessage *message)
         sendMessage("Envie de jouer au UNO ? Tapez ""\x02""!aide""\x0F"" pour afficher la liste des commandes");
 }
 
-void Echos::onKick(IrcKickMessage *message)
+void UNO::onKick(IrcKickMessage *message)
 {
     if (message->user() == nickName())
         sendCommand(IrcCommand::createJoin(chan));
@@ -82,20 +88,20 @@ void Echos::onKick(IrcKickMessage *message)
         remPlayer(message->user());
 }
 
-void Echos::onMode(IrcModeMessage *message)
+void UNO::onMode(IrcModeMessage *message)
 {
     if (message->kind() != IrcModeMessage::User)
         return;
     sendCommand(IrcCommand::createNames(chan));
 }
 
-void Echos::onNames(IrcNamesMessage *message)
+void UNO::onNames(IrcNamesMessage *message)
 {
     foreach (QString w, message->names())
         modes.insert(startsWithMode(w) ? w.mid(1) : w, startsWithMode(w) ? w.at(0) : QString());
 }
 
-void Echos::onNick(IrcNickMessage *message)
+void UNO::onNick(IrcNickMessage *message)
 {
     sendCommand(IrcCommand::createMessage("NickServ", "STATUS " + message->newNick()));
     modes.insert(message->newNick(), modes.value(message->oldNick()));
@@ -111,7 +117,7 @@ void Echos::onNick(IrcNickMessage *message)
     }
 }
 
-void Echos::onNotice(IrcNoticeMessage *message)
+void UNO::onNotice(IrcNoticeMessage *message)
 {
     if (message->content().split(" ").size() > 3 && message->nick() == "NickServ" && message->content().startsWith("STATUS") && (message->content().split(" ").at(3) == "Shayy" || message->content().split(" ").at(3) == "TuxAnge" || message->content().split(" ").at(3) == "Feeling"))
         sendCommand(IrcCommand::createMode(chan, "+o", message->content().split(" ").at(3)));
@@ -149,19 +155,19 @@ void Echos::onNotice(IrcNoticeMessage *message)
     }
 }
 
-void Echos::onPart(IrcPartMessage *message)
+void UNO::onPart(IrcPartMessage *message)
 {
     remPlayer(message->nick());
     modes.remove(message->nick());
 }
 
-void Echos::onQuit(IrcQuitMessage *message)
+void UNO::onQuit(IrcQuitMessage *message)
 {
     remPlayer(message->nick());
     modes.remove(message->nick());
 }
 
-void Echos::pingTimeout()
+void UNO::pingTimeout()
 {
     if (!inPing)
         return;
@@ -169,7 +175,7 @@ void Echos::pingTimeout()
     inPing = false;
 }
 
-void Echos::versionTimeout(QString nick)
+void UNO::versionTimeout(QString nick)
 {
     if (!inVersion)
         return;
@@ -177,7 +183,7 @@ void Echos::versionTimeout(QString nick)
     inVersion = false;
 }
 
-void Echos::showCards(QString nick, QString to)
+void UNO::showCards(QString nick, QString to)
 {
     if (nick.isEmpty())
         nick = currPlayer;
@@ -186,7 +192,7 @@ void Echos::showCards(QString nick, QString to)
     sendCommand(IrcCommand::createNotice(to, players->getPlayer(nick)->getDeck()->toString()));
 }
 
-QString Echos::nextPlayer()
+QString UNO::nextPlayer()
 {
     if (turns.indexOf(currPlayer) + (inversed ? -1 : 1) > turns.size() -1 || turns.indexOf(currPlayer) + (inversed ? -1 : 1) < 0)
         return inversed ? turns.last() : turns.first();
@@ -194,7 +200,7 @@ QString Echos::nextPlayer()
         return turns.at(turns.indexOf(currPlayer) + (inversed ? -1 : 1));
 }
 
-void Echos::remPlayer(QString nick)
+void UNO::remPlayer(QString nick)
 {
     if (players->contains(nick))
     {
@@ -220,7 +226,7 @@ void Echos::remPlayer(QString nick)
     }
 }
 
-void Echos::clear()
+void UNO::clear()
 {
     players->clear();
     turns.clear();
@@ -232,7 +238,7 @@ void Echos::clear()
     cards = new Cards();
 }
 
-void Echos::sendMessage(QString message)
+void UNO::sendMessage(QString message)
 {
     message.replace("\x02", "\x03""04,15");
     message.replace("\x0F", "\x03""00,14");
@@ -256,7 +262,7 @@ void Echos::sendMessage(QString message)
     sendCommand(IrcCommand::createMessage(chan, msg));
 }
 
-void Echos::command(QString nick, QString cmd, QStringList args)
+void UNO::command(QString nick, QString cmd, QStringList args)
 {
     bool end = false;
 
@@ -552,7 +558,14 @@ void Echos::command(QString nick, QString cmd, QStringList args)
                             }
                         }
                         else
-                            sendMessage("Vous ne pouvez pas jouer cette carte, il ne reste que " + QString::number(cards->size()) + " cartes dans la pioche, " + curr->getColoredName());
+                        {
+                            lastCard = new Card(color, id);
+                            curr->getDeck()->remCard("N", id);
+                            Player *next = players->getPlayer(nextPlayer());
+                            sendMessage(next->getColoredName() + " pioche " + QString::number(cards->size()) + " cartes");
+                            sendCommand(IrcCommand::createNotice(next->getName(), next->getDeck()->randCards(cards->size())));
+                            end = true;
+                        }
                     }
                     else if (id == "+2")
                     {
@@ -567,7 +580,14 @@ void Echos::command(QString nick, QString cmd, QStringList args)
                             end = true;
                         }
                         else
-                            sendMessage("Vous ne pouvez pas jouer cette carte, il ne reste que " + QString::number(cards->size()) + " cartes dans la pioche, " + curr->getColoredName());
+                        {
+                            lastCard = new Card(color, id);
+                            curr->getDeck()->remCard("N", id);
+                            Player *next = players->getPlayer(nextPlayer());
+                            sendMessage(next->getColoredName() + " pioche " + QString::number(cards->size()) + " cartes");
+                            sendCommand(IrcCommand::createNotice(next->getName(), next->getDeck()->randCards(cards->size())));
+                            end = true;
+                        }
                     }
                     else if (id == "I")
                     {
@@ -657,12 +677,12 @@ void Echos::command(QString nick, QString cmd, QStringList args)
     }
 }
 
-bool Echos::isOp(QString user)
+bool UNO::isOp(QString user)
 {
     return network()->prefixToMode(modes.value(user)) == "o" || network()->prefixToMode(modes.value(user)) == "q" ? true : false;
 }
 
-bool Echos::startsWithMode(QString nick)
+bool UNO::startsWithMode(QString nick)
 {
     QString w = nick.at(0);
     if (w == network()->modeToPrefix("q") || w == network()->modeToPrefix("a") || w == network()->modeToPrefix("o") || w == network()->modeToPrefix("h") || w == network()->modeToPrefix("v"))
@@ -670,8 +690,7 @@ bool Echos::startsWithMode(QString nick)
     return false;
 }
 
-Cards* Echos::getCards() const
+Cards* UNO::getCards() const
 {
     return cards;
 }
-

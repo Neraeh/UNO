@@ -1,5 +1,0 @@
-<RCC>
-    <qresource prefix="/slaps">
-        <file>slaps.ini</file>
-    </qresource>
-</RCC>

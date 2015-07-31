@@ -1,5 +1,5 @@
-#ifndef ECHOS_H
-#define ECHOS_H
+#ifndef UNO_H
+#define UNO_H
 
 #include <QCoreApplication>
 #include <QTextCodec>
@@ -11,12 +11,12 @@
 #include "players.h"
 
 class Players;
-class Echos : public IrcConnection
+class UNO : public IrcConnection
 {
     Q_OBJECT
 public:
-    explicit Echos(QCoreApplication *_parent = 0);
-    ~Echos();
+    explicit UNO(QCoreApplication *_parent = 0);
+    ~UNO();
     Cards* getCards() const;
 
 public slots:
@@ -54,8 +54,8 @@ private:
     QHash<QString,QString> modes;
     bool inGame, preGame, drawed, inversed, inPing, inVersion;
     unsigned int pingTimeBegin, pingTime, pingCount;
-    QSettings* slaps;
+    QSettings *settings, *slaps;
 };
 
-#endif // ECHOS_H
+#endif // UNO_H
 

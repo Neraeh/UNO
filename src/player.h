@@ -1,17 +1,17 @@
 #ifndef PLAYER_H
 #define PLAYER_H
 
-#include "echos.h"
+#include "uno.h"
 #include "deck.h"
 
 class Deck;
-class Echos;
+class UNO;
 class Player : public QObject
 {
     Q_OBJECT
 public:
     explicit Player(QString _name, Deck *_deck, bool _canPlay, QString _color);
-    explicit Player(QString _name, Echos *_parent);
+    explicit Player(QString _name, UNO *_parent);
     Deck* getDeck() const;
     QString getName() const;
     QString getColoredName() const;
