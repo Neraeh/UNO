@@ -2,7 +2,6 @@
 
 UNO::UNO(QCoreApplication *_parent) : IrcConnection(_parent)
 {
-    chan = "#dev";
     cards = new Cards;
     players = new Players;
     lastCard = new Card("", "");
@@ -17,6 +16,7 @@ UNO::UNO(QCoreApplication *_parent) : IrcConnection(_parent)
     qputenv("IRC_DEBUG", settings->value("debug", "0").toByteArray());
 
     setServers(QStringList(settings->value("server", "irc.t411.io").toString()));
+    chan = settings->value("chan", "#uno").toString();
     setEncoding(settings->value("encoding", "UTF-8").toByteArray());
     setUserName(settings->value("username", "UNO").toString());
     setNickName(settings->value("nickname", "UNO").toString());
