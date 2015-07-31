@@ -3,7 +3,7 @@ UNO IRC bot
 **UNO** est un bot IRC écrit avec le framework Qt.
 
 ## Utilisation
-Qt en version 4.6 minimum est indispensable pour la compilation et l'utilisation
+Qt en version 5.0 minimum est indispensable pour la compilation et l'utilisation
 # Linux
 ```
 $ git clone https://github.com/TheShayy/UNO.git && cd UNO
