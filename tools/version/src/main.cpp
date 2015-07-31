@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
     if (!file->open(QIODevice::ReadOnly | QIODevice::Text))
     {
         qCritical() << "Impossible de trouver libcommuni";
-        qApp->exit(1);
+        return 1;
     }
 
     QString origContent = content.readAll();
@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
     if (!file->open(QIODevice::WriteOnly | QIODevice::Truncate))
     {
         qCritical() << "Impossible d'obtenir les droits d'écriture dans le dossier de libcommuni";
-        qApp->exit(1);
+        return 1;
     }
 
     content << origContent.replace("reply = QLatin1String(\"VERSION libcommuni \") + Irc::version() + QLatin1String(\" - https://communi.github.io\");",

@@ -20,3 +20,4 @@ cd ./../../../src
 errchk qmake
 echo "UNO est prêt pour la compilation"
 echo "Vous pouvez utiliser make"
+echo "Avant de lancer make, vérifiez que vous êtes bien dans le dossier UNO/src"
