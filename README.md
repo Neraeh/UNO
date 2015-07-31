@@ -4,12 +4,21 @@ UNO IRC bot
 
 ## Utilisation
 Qt en version 4.6 minimum est indispensable pour la compilation et l'utilisation
+# Linux
 ```
 $ git clone https://github.com/TheShayy/UNO.git && cd UNO
-$ qmake
+$ chmod +x configure && ./configure
 $ make
 ```
-A la fin de la compilation un exécutable nommé UNO apparaîtra
+A la fin de la compilation un exécutable nommé UNO sera dans le dossier UNO/src
+
+# Windows
+```
+> git clone https://github.com/TheShayy/UNO.git && cd UNO
+> call configure.bat
+> mingw32-make
+```
+A la fin de la compilation un exécutable nommé UNO.exe sera dans le dossier UNO/src/release
 
 ### Librairies externes
 - libcommuni (https://github.com/communi/libcommuni)

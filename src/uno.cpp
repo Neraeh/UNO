@@ -7,10 +7,10 @@ UNO::UNO(QCoreApplication *_parent) : IrcConnection(_parent)
     lastCard = new Card("", "");
     inGame = false, preGame = false, drawed = false, inversed = false, inPing = false, inVersion = false;
 
-    settings = new QSettings(qApp->applicationDirPath() + "/UNO/settings.ini", QSettings::IniFormat);
+    settings = new QSettings(qApp->applicationDirPath() + "/ini/settings.ini", QSettings::IniFormat);
     settings->setIniCodec("UTF-8");
 
-    slaps = new QSettings(qApp->applicationDirPath() + "/UNO/slaps.ini", QSettings::IniFormat);
+    slaps = new QSettings(qApp->applicationDirPath() + "/ini/slaps.ini", QSettings::IniFormat);
     slaps->setIniCodec("UTF-8");
 
     qputenv("IRC_DEBUG", settings->value("debug", "0").toByteArray());

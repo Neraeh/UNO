@@ -1,0 +1,22 @@
+#!/bin/bash
+
+function errchk {
+    "$@"
+    local status=$?
+    if [ $status -ne 0 ]; then
+        echo "Erreur avec $1" >&2
+        exit 1
+    fi
+    return $status
+}
+
+git submodule init
+git submodule update
+cd ./tools/version/src
+errchk qmake
+errchk make
+errchk ./version
+cd ./../../../src
+errchk qmake
+echo "UNO est prêt pour la compilation"
+echo "Vous pouvez utiliser make"
