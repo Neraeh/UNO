@@ -1,6 +1,6 @@
 #include "cards.h"
 
-Cards::Cards() : QObject()
+Cards::Cards()
 {
     cards.append(new Card("R", "0"));
     cards.append(new Card("R", "1"));

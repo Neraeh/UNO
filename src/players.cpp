@@ -1,6 +1,6 @@
 #include "players.h"
 
-Players::Players() : QObject()
+Players::Players()
 {
     inversed = false;
 }

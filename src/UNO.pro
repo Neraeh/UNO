@@ -38,4 +38,4 @@ HEADERS += \
     user.h \
     users.h
 
-include($$_PRO_FILE_PWD_/../libcommuni/src/src.pri)
+include($$_PRO_FILE_PWD_/../libcommuni/src/core/core.pri)

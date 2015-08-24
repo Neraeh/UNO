@@ -1,6 +1,6 @@
 #include "card.h"
 
-Card::Card(QString _color, QString _id) : QObject()
+Card::Card(QString _color, QString _id)
 {
     color = _color.toUpper(), id = _id.toUpper();
 }

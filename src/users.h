@@ -1,11 +1,11 @@
 #ifndef USERS_H
 #define USERS_H
 
+#include <QList>
 #include "user.h"
 
-class Users : public QObject
+class Users
 {
-    Q_OBJECT
 public:
     explicit Users();
     void add(User* _user);

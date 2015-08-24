@@ -23,6 +23,7 @@ UNO::UNO(QCoreApplication *_parent) : IrcConnection(_parent)
     setNickName(settings->value("nickname", "UNO").toString());
     setRealName(settings->value("realname", "UNO").toString());
     setReconnectDelay(5);
+
     open();
 
     QObject::connect(this, SIGNAL(connected()), this, SLOT(onConnect()));
@@ -48,6 +49,7 @@ UNO::~UNO()
     slaps->sync();
     delete cards;
     delete players;
+    delete users;
     delete lastCard;
     delete settings;
     delete slaps;

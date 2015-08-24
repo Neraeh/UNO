@@ -1,6 +1,6 @@
 #include "deck.h"
 
-Deck::Deck(UNO *_parent) : QObject(_parent)
+Deck::Deck(UNO *_parent)
 {
     parent = _parent;
 }

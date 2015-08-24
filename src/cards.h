@@ -1,11 +1,11 @@
 #ifndef CARDS_H
 #define CARDS_H
 
+#include <QList>
 #include "card.h"
 
-class Cards : public QObject
+class Cards
 {
-    Q_OBJECT
 public:
     explicit Cards();
     Card* get(int i) const;

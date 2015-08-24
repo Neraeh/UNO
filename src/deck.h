@@ -5,9 +5,8 @@
 #include "card.h"
 
 class UNO;
-class Deck : public QObject
+class Deck
 {
-    Q_OBJECT
 public:
     explicit Deck(UNO *_parent);
     void init();

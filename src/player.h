@@ -6,9 +6,8 @@
 
 class Deck;
 class UNO;
-class Player : public QObject
+class Player
 {
-    Q_OBJECT
 public:
     explicit Player(QString _name, Deck *_deck, bool _canPlay, QString _color);
     explicit Player(QString _name, UNO *_parent);

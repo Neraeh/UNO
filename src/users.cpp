@@ -1,6 +1,6 @@
 #include "users.h"
 
-Users::Users() : QObject() {}
+Users::Users() {}
 
 void Users::add(User* _user)
 {

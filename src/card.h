@@ -1,11 +1,10 @@
 #ifndef CARD_H
 #define CARD_H
 
-#include <QObject>
+#include <QString>
 
-class Card : public QObject
+class Card
 {
-    Q_OBJECT
 public:
     explicit Card(QString _color, QString _id);
     QString getColor() const;

@@ -1,11 +1,10 @@
 #ifndef USER_H
 #define USER_H
 
-#include <QObject>
+#include <QString>
 
-class User : public QObject
+class User
 {
-    Q_OBJECT
 public:
     explicit User(QString _nick, QString _mode = QString());
     QString getNick() const;

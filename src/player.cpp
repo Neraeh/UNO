@@ -1,11 +1,11 @@
 #include "player.h"
 
-Player::Player(QString _name, Deck* _deck, bool _canPlay, QString _color) : QObject()
+Player::Player(QString _name, Deck* _deck, bool _canPlay, QString _color)
 {
     name = _name, deck = _deck, play = _canPlay, color = _color;
 }
 
-Player::Player(QString _name, UNO *_parent) : QObject(_parent)
+Player::Player(QString _name, UNO *_parent)
 {
     name = _name;
     qsrand(QTime::currentTime().msec());

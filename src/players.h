@@ -4,9 +4,8 @@
 #include "player.h"
 
 class Player;
-class Players : public QObject
+class Players
 {
-    Q_OBJECT
 public:
     explicit Players();
     void add(Player* _player);
