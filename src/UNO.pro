@@ -12,7 +12,7 @@ TARGET = UNO
 CONFIG   += console
 CONFIG   -= app_bundle
 
-QMAKE_CFLAGS_RELEASE += -O3 -pipe
+QMAKE_CFLAGS_RELEASE += -O3 -pipe -fomit-frame-pointer
 QMAKE_CXXFLAGS_RELEASE += $$QMAKE_CFLAGS_RELEASE
 QMAKE_LFLAGS_RELEASE += -s
 
@@ -24,7 +24,9 @@ SOURCES += main.cpp \
     cards.cpp \
     deck.cpp \
     players.cpp \
-    player.cpp
+    player.cpp \
+    user.cpp \
+    users.cpp
 
 HEADERS += \
     uno.h \
@@ -32,6 +34,8 @@ HEADERS += \
     cards.h \
     deck.h \
     players.h \
-    player.h
+    player.h \
+    user.h \
+    users.h
 
 include($$_PRO_FILE_PWD_/../libcommuni/src/src.pri)

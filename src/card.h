@@ -10,7 +10,7 @@ public:
     explicit Card(QString _color, QString _id);
     QString getColor() const;
     QString getId() const;
-    QString toString() const;
+    QString toString(bool colored = true) const;
     inline bool operator==(const Card& other) const;
 
 private:

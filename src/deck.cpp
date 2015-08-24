@@ -17,7 +17,7 @@ void Deck::init()
     }
 }
 
-QString Deck::randCards(int _count)
+QString Deck::randCards(int _count, bool colored)
 {
     QString newCards = "+ ";
     for (int i = 0; i < _count; i++)
@@ -25,7 +25,7 @@ QString Deck::randCards(int _count)
         qsrand((uint)QTime::currentTime().msec());
         int rand = qrand() % parent->getCards()->size();
         cards.append(parent->getCards()->get(rand));
-        newCards += parent->getCards()->get(rand)->toString() + " ";
+        newCards += parent->getCards()->get(rand)->toString(colored) + " ";
         parent->getCards()->remove(rand);
     }
     return newCards;
@@ -77,10 +77,10 @@ bool Deck::isEmpty() const
     return cards.isEmpty();
 }
 
-QString Deck::toString() const
+QString Deck::toString(bool colored) const
 {
     QString deck;
     foreach (Card* w, cards)
-        deck += w->toString() + " ";
+        deck += w->toString(colored) + " ";
     return deck;
 }
