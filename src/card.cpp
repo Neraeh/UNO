@@ -2,8 +2,7 @@
 
 Card::Card(QString _color, QString _id) : QObject()
 {
-    color = _color.toUpper();
-    id = _id.toUpper();
+    color = _color.toUpper(), id = _id.toUpper();
 }
 
 QString Card::getColor() const
@@ -24,21 +23,24 @@ inline bool Card::operator==(const Card& other) const
         return false;
 }
 
-QString Card::toString() const
+QString Card::toString(bool colored) const
 {
-    QString card = "\x02""\x03""01";
-
-    if (color == "R")
-        card += ",04";
-    else if (color == "B")
-        card += ",11";
-    else if (color == "J")
-        card += ",08";
-    else if (color == "V")
-        card += ",03";
+    if (colored)
+    {
+        QString card = "\x02""\x03""01";
+        if (color == "R")
+            card += ",04";
+        else if (color == "B")
+            card += ",11";
+        else if (color == "J")
+            card += ",08";
+        else if (color == "V")
+            card += ",03";
+        else
+            card += ",00""\x03""00,01";
+        card += "[" + id + "]\x0F";
+        return card;
+    }
     else
-        card += ",00""\x03""00,01";
-
-    card += "[" + id + "]\x0F";
-    return card;
+        return "[" + (id == "+4" || id == "J" ? "" : color + ",") + id + "]";
 }

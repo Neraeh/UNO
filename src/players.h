@@ -17,7 +17,7 @@ public:
     QString toString() const;
     QString first() const;
     Player *rand() const;
-    Player* getPlayer(QString _name) const;
+    Player* get(QString _name) const;
     int indexOf(QString _name) const;
     int size() const;
     bool isEmpty() const;

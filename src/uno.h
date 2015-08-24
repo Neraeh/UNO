@@ -9,8 +9,10 @@
 #include <QTimer>
 #include "cards.h"
 #include "players.h"
+#include "users.h"
 
 class Players;
+class Cards;
 class UNO : public IrcConnection
 {
     Q_OBJECT
@@ -40,7 +42,7 @@ private:
     QString nextPlayer();
     void remPlayer(QString nick);
     void clear();
-    void sendMessage(QString message);
+    void sendMessage(QString message, Card* card = 0);
     void command(QString nick, QString cmd, QStringList args);
     bool isOp(QString user);
     bool startsWithMode(QString nick);
@@ -51,7 +53,7 @@ private:
     QList<QString> turns;
     Card *lastCard;
     QString currPlayer, currPing, chan;
-    QHash<QString,QString> modes;
+    Users *users;
     bool inGame, preGame, drawed, inversed, inPing, inVersion;
     unsigned int pingTimeBegin, pingTime, pingCount;
     QSettings *settings, *slaps;

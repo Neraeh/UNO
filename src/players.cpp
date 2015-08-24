@@ -57,7 +57,7 @@ Player* Players::rand() const
     return players.at(qrand() % players.size());
 }
 
-Player* Players::getPlayer(QString _name) const
+Player* Players::get(QString _name) const
 {
     foreach (Player* w, players)
         if (w->getName() == _name)
