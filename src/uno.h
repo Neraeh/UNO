@@ -48,6 +48,7 @@ private:
     void sendMessage(QString message, Card* card = 0);
     void flushMessages();
     void command(QString nick, QString cmd, QStringList args);
+    void showScores();
     bool isOp(QString user);
     bool startsWithMode(QString nick);
 
@@ -61,7 +62,7 @@ private:
     Users *users;
     bool inGame, preGame, drawed, inversed, inPing, inVersion;
     unsigned int pingTimeBegin, pingTime, pingCount;
-    QSettings *settings, *slaps;
+    QSettings *settings, *slaps, *colors, *scores;
 };
 
 #endif // UNO_H

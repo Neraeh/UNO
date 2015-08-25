@@ -4,6 +4,8 @@ Users::Users() {}
 
 void Users::add(User* _user)
 {
+    if (this->contains(_user->getNick()))
+        this->remove(_user->getNick());
     users.append(_user);
 }
 

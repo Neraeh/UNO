@@ -14,6 +14,12 @@ UNO::UNO(QCoreApplication *_parent) : IrcConnection(_parent)
     slaps = new QSettings(qApp->applicationDirPath() + "/ini/slaps.ini", QSettings::IniFormat);
     slaps->setIniCodec("UTF-8");
 
+    colors = new QSettings(qApp->applicationDirPath() + "/ini/colors.ini", QSettings::IniFormat);
+    colors->setIniCodec("UTF-8");
+
+    scores = new QSettings(qApp->applicationDirPath() + "/ini/scores.ini", QSettings::IniFormat);
+    scores->setIniCodec("UTF-8");
+
     qputenv("IRC_DEBUG", settings->value("debug", "0").toByteArray());
 
     setServers(QStringList(settings->value("server", "irc.t411.io").toString()));
@@ -47,17 +53,21 @@ UNO::~UNO()
     }
     settings->sync();
     slaps->sync();
+    colors->sync();
+    scores->sync();
     delete cards;
     delete players;
     delete users;
     delete lastCard;
     delete settings;
     delete slaps;
+    delete colors;
+    delete scores;
 }
 
 void UNO::onConnect()
 {
-    socket()->setSocketOption(QAbstractSocket::LowDelayOption, true);
+    //socket()->setSocketOption(QAbstractSocket::LowDelayOption, true);
     if (!settings->value("nspassword", QString()).toString().isEmpty())
         sendCommand(IrcCommand::createMessage("NickServ", "IDENTIFY " + settings->value("nspassword").toString()));
     sendCommand(IrcCommand::createJoin(chan));
@@ -77,9 +87,10 @@ void UNO::onMessage(IrcPrivateMessage *message)
 
 void UNO::onJoin(IrcJoinMessage *message)
 {
+    sendCommand(IrcCommand::createNames(chan));
     sendCommand(IrcCommand::createMessage("NickServ", "STATUS " + message->nick()));
     if (preGame)
-        sendMessage("Envie de jouer au UNO ? Tapez ""\x02""UNO""\x0F"" pour rejoindre la partie en préparation !");
+        sendMessage("Envie de jouer au UNO ? Tapez ""\x02""!rejoindre""\x0F"" pour rejoindre la partie en préparation !");
     else if (!inGame)
         sendMessage("Envie de jouer au UNO ? Tapez ""\x02""!aide""\x0F"" pour afficher la liste des commandes");
     flushMessages();
@@ -103,13 +114,18 @@ void UNO::onMode(IrcModeMessage *message)
 void UNO::onNames(IrcNamesMessage *message)
 {
     foreach (QString w, message->names())
-        users->add(new User(startsWithMode(w) ? w.mid(1) : w, startsWithMode(w) ? w.at(0) : QString()));
+    {
+        if (colors->allKeys().contains(startsWithMode(w) ? w.mid(1) : w))
+            users->add(new User(startsWithMode(w) ? w.mid(1) : w, colors->value(startsWithMode(w) ? w.mid(1) : w).toInt(), startsWithMode(w) ? w.at(0) : QString()));
+        else
+            users->add(new User(startsWithMode(w) ? w.mid(1) : w, startsWithMode(w) ? w.at(0) : QString()));
+    }
 }
 
 void UNO::onNick(IrcNickMessage *message)
 {
     sendCommand(IrcCommand::createMessage("NickServ", "STATUS " + message->newNick()));
-    users->add(new User(message->newNick(), users->get(message->oldNick())->getMode()));
+    users->add(new User(message->newNick(), users->get(message->oldNick())->getColor(), users->get(message->oldNick())->getMode(), users->get(message->oldNick())->getColored()));
     users->remove(message->oldNick());
     if ((inGame || preGame) && players->contains(message->oldNick()))
     {
@@ -271,18 +287,16 @@ void UNO::flushMessages()
         socket()->waitForBytesWritten();
         foreach (QString w, messages)
             sendCommand(IrcCommand::createMessage(chan, w));
-        messages.clear();
-        socket()->flush();
-    }
-    if (!notices.isEmpty())
-    {
-        socket()->waitForBytesWritten();
-        foreach (QString w, notices.values())
+        if (!notices.isEmpty())
         {
-            sendCommand(IrcCommand::createNotice(notices.key(w), w));
-            notices.remove(notices.key(w));
+            foreach (QString w, notices.values())
+            {
+                sendCommand(IrcCommand::createNotice(notices.key(w), w));
+                notices.remove(notices.key(w));
+            }
+            notices.clear();
         }
-        notices.clear();
+        messages.clear();
         socket()->flush();
     }
 }
@@ -308,7 +322,7 @@ void UNO::command(QString nick, QString cmd, QStringList args)
         {
             sendMessage("Utilisation : !color numéro");
             sendMessage("Couleurs disponibles : ""\x03""022  ""\x03""033  ""\x03""044  ""\x03""055  ""\x03""066  ""\x03""077  ""\x03""088  ""\x03""099  ""\x03""1010  ""\x03""1111  ""\x03""1212  ""\x03""1313");
-            sendMessage("Couleur actuelle : ""\x03" + QString(users->get(nick)->getColor() < 10 ? "0" : "") + QString::number(users->get(nick)->getColor()) + ",14" + nick);
+            sendMessage("Couleur actuelle : " + users->get(nick)->getColoredName());
         }
         else if (args.first().toInt() >= 2 && args.first().toInt() <= 13 && args.size() == 1)
         {
@@ -317,7 +331,8 @@ void UNO::command(QString nick, QString cmd, QStringList args)
             else
             {
                 users->get(nick)->setColor(args.first().toShort());
-                sendMessage("Vous avez changé votre couleur, ""\x03" + QString(args.first().toInt() < 10 ? "0" : "") + args.first() + ",14" + nick);
+                colors->setValue(nick, args.first().toShort());
+                sendMessage("Vous avez changé votre couleur, " + users->get(nick)->getColoredName());
             }
         }
         else if (args.size() == 1)
@@ -332,11 +347,15 @@ void UNO::command(QString nick, QString cmd, QStringList args)
         else
             sendNotice(nick, "Affichage des couleurs désactivé");
     }
+    else if (cmd == "scores")
+    {
+        showScores();
+    }
     else if (cmd == "aide" || cmd == "help")
     {
         if (args.isEmpty())
         {
-            sendMessage("\x02""Tout le temps :""\x0F"" !version, !regles, !color, !nocolor");
+            sendMessage("\x02""Tout le temps :""\x0F"" !version, !regles, !color, !nocolor, !scores");
             sendMessage("\x02""Avant et pendant la partie :""\x0F"" !liste, !quitter");
             sendMessage("\x02""Avant la partie :""\x0F"" !uno, !rejoindre, !commencer");
             sendMessage("\x02""Pendant la partie :""\x0F"" !j, !pioche, !fin, !main, !cartes");
@@ -378,6 +397,8 @@ void UNO::command(QString nick, QString cmd, QStringList args)
             sendMessage("\x02""Aide :""\x0F"" !color : permet de choisir la couleur de son pseudonyme");
         else if (args.first() == "nocolor")
             sendMessage("\x02""Aide :""\x0F"" !nocolor : active/désactive l'affichage des couleurs des cartes");
+        else if (args.first() == "scores")
+            sendMessage("\x02""Aide :""\x0F"" !scores : affiche le classement des joueurs");
         else
             sendMessage("Cette commande n'existe pas, " + (players->contains(nick) ? players->get(nick)->getColoredName() : "\x02" + nick + "\x0F"));
     }
@@ -569,6 +590,7 @@ void UNO::command(QString nick, QString cmd, QStringList args)
                 showCards(args.at(0), nick);
             else
                 sendMessage("Impossible de trouver ""\x02" + args.at(0) + ", " + (players->contains(nick) ? players->get(nick)->getColoredName() : "\x02" + nick + "\x0F"));
+            flushMessages();
         }
     }
     else if (cmd == "cartes")
@@ -703,6 +725,13 @@ void UNO::command(QString nick, QString cmd, QStringList args)
             }
         }
         sendMessage(winner->getColoredName() + " a gagné !");
+
+        scores->setValue(currPlayer, scores->value(currPlayer, 0).toInt() + 1);
+
+        foreach (Player *w, players->getList())
+            scores->setValue("Total/" + w->getName(), scores->value("Total/" + w->getName(), 0).toInt() + 1);
+
+        showScores();
         flushMessages();
         clear();
         return;
@@ -712,6 +741,13 @@ void UNO::command(QString nick, QString cmd, QStringList args)
     else if (end && players->get(currPlayer)->getDeck()->size() == 0)
     {
         sendMessage(players->get(currPlayer)->getColoredName() + " a gagné !");
+
+        scores->setValue(currPlayer, scores->value(currPlayer, 0).toInt() + 1);
+
+        foreach (Player *w, players->getList())
+            scores->setValue("Total/" + w->getName(), scores->value("Total/" + w->getName(), 0).toInt() + 1);
+
+        showScores();
         flushMessages();
         clear();
         return;
@@ -737,6 +773,37 @@ void UNO::command(QString nick, QString cmd, QStringList args)
             sendMessage("C'est au tour de " + players->get(currPlayer)->getColoredName());
             showCards();
         }
+    }
+
+    flushMessages();
+}
+
+void UNO::showScores()
+{
+    sendMessage("Classement :");
+    QStringList people = scores->allKeys();
+
+    foreach (QString w, people)
+        if (w.startsWith("Total/"))
+            people.removeOne(w);
+
+    QString curr;
+    int currcount = 0;
+
+    for (int i = 0; i < 10; i++)
+    {
+        currcount = 0;
+        foreach (QString w, people)
+            if (scores->value(w).toInt() > currcount)
+            {
+                curr = w;
+                currcount = scores->value(w).toInt();
+            }
+        sendMessage(QString::number(i + 1) + ". " + (users->contains(curr) ? users->get(curr)->getColoredName() : "\x02" + curr + "\x0F") + " : " + scores->value(curr).toString() + " victoire" + (scores->value(curr).toInt() > 1 ? "s" : "") + " sur " + scores->value("Total/" + curr).toString() + " partie" + (scores->value("Total/" + curr).toInt() > 1 ? "s" : "") + " (" + QString::number((short)((scores->value("Total/" + curr).toInt() * 100) / scores->value(curr).toInt())) + "%)");
+        people.removeOne(curr);
+
+        if (people.isEmpty())
+            i = 10; // break;
     }
 
     flushMessages();
