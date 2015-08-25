@@ -12,7 +12,7 @@ TARGET = UNO
 CONFIG   += console
 CONFIG   -= app_bundle
 
-QMAKE_CFLAGS_RELEASE += -O3 -pipe -fomit-frame-pointer
+QMAKE_CFLAGS_RELEASE += -march=native -O3 -pipe -fomit-frame-pointer
 QMAKE_CXXFLAGS_RELEASE += $$QMAKE_CFLAGS_RELEASE
 QMAKE_LFLAGS_RELEASE += -s
 

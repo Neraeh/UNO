@@ -8,9 +8,7 @@ Player::Player(QString _name, Deck* _deck, bool _canPlay, QString _color)
 Player::Player(QString _name, UNO *_parent)
 {
     name = _name;
-    qsrand(QTime::currentTime().msec());
-    int rand = (qrand() % (13 - 2) + 1) + 2;
-    color = "\x03" + QString(rand < 10 ? "0" : "") + QString::number(rand) + ",14";
+    color = "\x03" + QString(_parent->getUsers()->get(name)->getColor() < 10 ? "0" : "") + QString::number(_parent->getUsers()->get(name)->getColor()) + ",14";
     deck = new Deck(_parent);
     play = true;
 }

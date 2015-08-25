@@ -15,14 +15,6 @@ QString Card::getId() const
     return id;
 }
 
-inline bool Card::operator==(const Card& other) const
-{
-    if (getId() == other.getId() && getColor() == other.getColor())
-        return true;
-    else
-        return false;
-}
-
 QString Card::toString(bool colored) const
 {
     if (colored)

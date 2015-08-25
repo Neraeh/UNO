@@ -21,7 +21,7 @@ public:
 private:
     QString name, color;
     Deck* deck;
-    bool play;
+    bool play, bluffed;
 };
 
 #endif // PLAYER_H

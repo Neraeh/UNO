@@ -7,6 +7,7 @@
 #include <IrcCommand>
 #include <QSettings>
 #include <QTimer>
+#include <QHash>
 #include "cards.h"
 #include "players.h"
 #include "users.h"
@@ -20,6 +21,7 @@ public:
     explicit UNO(QCoreApplication *_parent = 0);
     ~UNO();
     Cards* getCards() const;
+    Users* getUsers() const;
 
 public slots:
     void onConnect();
@@ -42,7 +44,9 @@ private:
     QString nextPlayer();
     void remPlayer(QString nick);
     void clear();
+    void sendNotice(QString target, QString message);
     void sendMessage(QString message, Card* card = 0);
+    void flushMessages();
     void command(QString nick, QString cmd, QStringList args);
     bool isOp(QString user);
     bool startsWithMode(QString nick);
@@ -50,7 +54,8 @@ private:
 private:
     Cards *cards;
     Players *players;
-    QList<QString> turns;
+    QList<QString> turns, messages;
+    QHash<QString,QString> notices;
     Card *lastCard;
     QString currPlayer, currPing, chan;
     Users *users;
