@@ -168,7 +168,7 @@ void UNO::onNotice(IrcNoticeMessage *message)
                 green.append(" ");
             while (red.length() + green.length() < 49)
                 red.append(" ");
-            sendCommand(IrcCommand::createMessage(chan, "\x03""01,03" + green + "\x03""01,04" + red + "\x0F"" " + users->get(currPing)->getColoredName() + ": " + QString::number(pingTime) + "ms"));
+            sendCommand(IrcCommand::createMessage(chan, "\x03""01,03" + green + "\x03""01,04" + red + "\x0F""\x02"" " + users->get(currPing)->getColoredName() + ": " + QString::number(pingTime) + "ms"));
             currPing = "";
             pingTime = 10000000;
             pingCount = 0;
