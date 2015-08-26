@@ -815,7 +815,7 @@ void UNO::showScores()
         currcount = 0;
         currperc = 0;
         foreach (QString w, people)
-            if (scores->value(w).toInt() >= currcount && ((scores->value(w).toInt() * 100) / scores->value("Total/" + w).toInt()) >= currperc)
+            if (scores->value(w).toInt() >= currcount || (scores->value(w).toInt() == currcount && ((scores->value(w).toInt() * 100) / scores->value("Total/" + w).toInt()) >= currperc))
             {
                 curr = w;
                 currcount = scores->value(w).toInt();
