@@ -5,7 +5,12 @@ Users::Users() {}
 void Users::add(User* _user)
 {
     if (this->contains(_user->getNick()))
+    {
+        _user->setColor(this->get(_user->getNick())->getColor());
+        _user->setColored(this->get(_user->getNick())->getColored());
         this->remove(_user->getNick());
+    }
+
     users.append(_user);
 }
 

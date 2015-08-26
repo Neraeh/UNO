@@ -799,7 +799,7 @@ void UNO::showScores()
                 curr = w;
                 currcount = scores->value(w).toInt();
             }
-        sendMessage(QString::number(i + 1) + ". " + (users->contains(curr) ? users->get(curr)->getColoredName() : "\x02" + curr + "\x0F") + " : " + scores->value(curr).toString() + " victoire" + (scores->value(curr).toInt() > 1 ? "s" : "") + " sur " + scores->value("Total/" + curr).toString() + " partie" + (scores->value("Total/" + curr).toInt() > 1 ? "s" : "") + " (" + QString::number((short)((scores->value("Total/" + curr).toInt() * 100) / scores->value(curr).toInt())) + "%)");
+        sendMessage(QString::number(i + 1) + ". " + (users->contains(curr) ? users->get(curr)->getColoredName() : "\x02" + curr + "\x0F") + " : " + scores->value(curr).toString() + " victoire" + (scores->value(curr).toInt() > 1 ? "s" : "") + " sur " + scores->value("Total/" + curr).toString() + " partie" + (scores->value("Total/" + curr).toInt() > 1 ? "s" : "") + " (" + QString::number((short)((scores->value(curr).toInt() * 100) / scores->value("Total/" + curr).toInt())) + "%)");
         people.removeOne(curr);
 
         if (people.isEmpty())
