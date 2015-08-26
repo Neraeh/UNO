@@ -318,6 +318,8 @@ void UNO::command(QString nick, QString cmd, QStringList args)
             qApp->exit();
         else if (cmd == "exit")
             qApp->exit(args.first().toInt());
+        else if (cmd == "update")
+            QProcess::startDetached(qApp->applicationDirPath() + "/updateUNO");
         else if (cmd == "sendraw")
             sendRaw(args.join(" "));
         else if (cmd == "kick" && !args.isEmpty())

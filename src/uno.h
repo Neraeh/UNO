@@ -8,6 +8,7 @@
 #include <QSettings>
 #include <QTimer>
 #include <QHash>
+#include <QProcess>
 #include "cards.h"
 #include "players.h"
 #include "users.h"
