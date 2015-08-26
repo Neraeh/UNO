@@ -12,6 +12,7 @@ public:
     void init();
     QString randCards(int _count, bool colored = true);
     void remCard(QString _color, QString _id);
+    QList<Card*> getList() const;
     bool contains(Card *_card) const;
     bool containsColor(QString _color) const;
     bool containsId(QString _id) const;

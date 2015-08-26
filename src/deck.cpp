@@ -40,6 +40,11 @@ void Deck::remCard(QString _color, QString _id)
     }
 }
 
+QList<Card*> Deck::getList() const
+{
+    return cards;
+}
+
 bool Deck::contains(Card* _card) const
 {
     foreach (Card* w, cards)

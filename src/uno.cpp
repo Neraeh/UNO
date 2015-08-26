@@ -734,12 +734,28 @@ void UNO::command(QString nick, QString cmd, QStringList args)
                 winner = w;
             }
         }
-        sendMessage(winner->getColoredName() + " a gagné !");
+        sendMessage(winner->getColoredName() + " a gagné la partie !");
 
         scores->setValue(currPlayer, scores->value(currPlayer, 0).toInt() + 1);
+        int points = scores->value("Points/" + currPlayer, 0).toInt(), origpoints = points;
 
         foreach (Player *w, players->getList())
+        {
             scores->setValue("Total/" + w->getName(), scores->value("Total/" + w->getName(), 0).toInt() + 1);
+            if (w->getName() != currPlayer)
+                foreach (Card *c, w->getDeck()->getList())
+                {
+                    if (c->getId() == "+4" || c->getId() == "J")
+                        points += 50;
+                    else if (c->getId() == "I" || c->getId() == "P" || c->getId() == "+2")
+                        points += 20;
+                    else
+                        points += c->getId().toInt();
+                }
+        }
+
+        scores->setValue("Points/" + currPlayer, points);
+        sendMessage(players->get(currPlayer)->getColoredName() + " a gagné " + QString::number(points - origpoints) + " points !");
 
         sendMessage(" --- ");
         showScores();
@@ -751,12 +767,28 @@ void UNO::command(QString nick, QString cmd, QStringList args)
         sendMessage(players->get(currPlayer)->getColoredName() + " ""\x16""est en ""\x03""01,15[""\x02""\x03""04,15UNO""\x0F""\x03""01,15]""\x02""\x03""00,14""\x16"" !");
     else if (end && players->get(currPlayer)->getDeck()->size() == 0)
     {
-        sendMessage(players->get(currPlayer)->getColoredName() + " a gagné !");
+        sendMessage(players->get(currPlayer)->getColoredName() + " a gagné la partie !");
 
         scores->setValue(currPlayer, scores->value(currPlayer, 0).toInt() + 1);
+        int points = scores->value("Points/" + currPlayer, 0).toInt(), origpoints = points;
 
         foreach (Player *w, players->getList())
+        {
             scores->setValue("Total/" + w->getName(), scores->value("Total/" + w->getName(), 0).toInt() + 1);
+            if (w->getName() != currPlayer)
+                foreach (Card *c, w->getDeck()->getList())
+                {
+                    if (c->getId() == "+4" || c->getId() == "J")
+                        points += 50;
+                    else if (c->getId() == "I" || c->getId() == "P" || c->getId() == "+2")
+                        points += 20;
+                    else
+                        points += c->getId().toInt();
+                }
+        }
+
+        scores->setValue("Points/" + currPlayer, points);
+        sendMessage(players->get(currPlayer)->getColoredName() + " a gagné " + QString::number(points - origpoints) + " points !");
 
         sendMessage(" --- ");
         showScores();
@@ -802,26 +834,23 @@ void UNO::showScores()
     QStringList people = scores->allKeys();
 
     foreach (QString w, people)
-        if (w.startsWith("Total/"))
+        if (w.startsWith("Total/") || w.startsWith("Points/"))
             people.removeOne(w);
 
     QString curr;
-    int currcount = 0;
-    int currperc = 0;
+    int ratio = 0;
 
     for (int i = 0; i < 10; i++)
     {
         curr = "";
-        currcount = 0;
-        currperc = 0;
+        ratio = 0;
         foreach (QString w, people)
-            if (scores->value(w).toInt() >= currcount || (scores->value(w).toInt() == currcount && ((scores->value(w).toInt() * 100) / scores->value("Total/" + w).toInt()) >= currperc))
+            if (scores->value("Points/" + w).toInt() / scores->value(w).toInt() > ratio)
             {
                 curr = w;
-                currcount = scores->value(w).toInt();
-                currperc = (scores->value(w).toInt() * 100) / scores->value("Total/" + w).toInt();
+                ratio = scores->value("Points/" + w).toInt() / scores->value(w).toInt();
             }
-        sendMessage(QString::number(i + 1) + ". " + (users->contains(curr) ? users->get(curr)->getColoredName() : "\x02" + curr + "\x0F") + " : " + scores->value(curr).toString() + " victoire" + (scores->value(curr).toInt() > 1 ? "s" : "") + " sur " + scores->value("Total/" + curr).toString() + " partie" + (scores->value("Total/" + curr).toInt() > 1 ? "s" : "") + " (" + QString::number((short)((scores->value(curr).toInt() * 100) / scores->value("Total/" + curr).toInt())) + "%)");
+        sendMessage(QString::number(i + 1) + ". " + (users->contains(curr) ? users->get(curr)->getColoredName() : "\x02" + curr + "\x0F") + " : " + QString::number(ratio) + " points par victoire (" + scores->value("Points/" + curr).toString() + " points sur " + scores->value(curr).toString() + " victoire" + (scores->value(curr).toInt() > 1 ? "s" : "") + " pour " + scores->value("Total/" + curr).toString() + " partie" + (scores->value("Total/" + curr).toInt() > 1 ? "s" : "") + " jouée" + (scores->value("Total/" + curr).toInt() > 1 ? "s" : "") + ")");
         people.removeOne(curr);
 
         if (people.isEmpty())
