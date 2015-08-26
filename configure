@@ -12,11 +12,7 @@ function errchk {
 
 git submodule init
 git submodule update
-cd ./tools/version/src
-errchk qmake
-errchk make
-errchk ./version
-cd ./../../../src
+cd src
 errchk qmake
 echo "UNO est prêt pour la compilation"
 echo "Vous pouvez utiliser make"

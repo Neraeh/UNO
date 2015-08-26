@@ -9,8 +9,6 @@ void Deck::init()
 {
     while (cards.size() < 7)
     {
-        QTime time = QTime::currentTime();
-        qsrand((uint)time.msec());
         int rand = qrand() % parent->getCards()->size();
         cards.append(parent->getCards()->get(rand));
         parent->getCards()->remove(rand);
@@ -22,7 +20,6 @@ QString Deck::randCards(int _count, bool colored)
     QString newCards = "+ ";
     for (int i = 0; i < _count; i++)
     {
-        qsrand((uint)QTime::currentTime().msec());
         int rand = qrand() % parent->getCards()->size();
         cards.append(parent->getCards()->get(rand));
         newCards += parent->getCards()->get(rand)->toString(colored) + " ";

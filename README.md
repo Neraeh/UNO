@@ -7,7 +7,7 @@ Qt en version 5.0 minimum est indispensable pour la compilation et l'utilisation
 # Linux
 ```
 $ git clone https://github.com/TheShayy/UNO.git && cd UNO
-$ chmod +x configure && ./configure
+$ ./configure
 $ make
 ```
 A la fin de la compilation un exécutable nommé UNO sera dans le dossier UNO/src

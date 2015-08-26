@@ -53,7 +53,6 @@ QString Players::first() const
 
 Player* Players::rand() const
 {
-    qsrand(QTime::currentTime().msec());
     return players.at(qrand() % players.size());
 }
 

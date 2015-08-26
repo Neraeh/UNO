@@ -2,6 +2,8 @@
 
 UNO::UNO(QCoreApplication *_parent) : IrcConnection(_parent)
 {
+    qsrand(QTime::currentTime().msec());
+
     cards = new Cards;
     players = new Players;
     users = new Users;
@@ -23,7 +25,7 @@ UNO::UNO(QCoreApplication *_parent) : IrcConnection(_parent)
     qputenv("IRC_DEBUG", settings->value("debug", "0").toByteArray());
 
     setServers(QStringList(settings->value("server", "irc.t411.io").toString()));
-    chan = settings->value("chan", "#uno").toString();
+    chan = (settings->value("chan", "#uno").toString().startsWith("#") ? "" : "#") + settings->value("chan", "#uno").toString();
     setEncoding(settings->value("encoding", "UTF-8").toByteArray());
     setUserName(settings->value("username", "UNO").toString());
     setNickName(settings->value("nickname", "UNO").toString());
@@ -67,7 +69,6 @@ UNO::~UNO()
 
 void UNO::onConnect()
 {
-    //socket()->setSocketOption(QAbstractSocket::LowDelayOption, true);
     if (!settings->value("nspassword", QString()).toString().isEmpty())
         sendCommand(IrcCommand::createMessage("NickServ", "IDENTIFY " + settings->value("nspassword").toString()));
     sendCommand(IrcCommand::createJoin(chan));
@@ -204,6 +205,16 @@ void UNO::versionTimeout(QString nick)
     inVersion = false;
 }
 
+void UNO::preGameTimeout()
+{
+    if (!preGame)
+        return;
+
+    sendMessage("Délai de préparation de la partie dépassé, la partie est annulée");
+    flushMessages();
+    clear();
+}
+
 void UNO::showCards(QString nick, QString to)
 {
     if (nick.isEmpty())
@@ -282,23 +293,19 @@ void UNO::sendMessage(QString message, Card *card)
 
 void UNO::flushMessages()
 {
-    if (!messages.isEmpty())
-    {
-        socket()->waitForBytesWritten();
-        foreach (QString w, messages)
-            sendCommand(IrcCommand::createMessage(chan, w));
-        if (!notices.isEmpty())
-        {
-            foreach (QString w, notices.values())
-            {
-                sendCommand(IrcCommand::createNotice(notices.key(w), w));
-                notices.remove(notices.key(w));
-            }
-            notices.clear();
-        }
-        messages.clear();
-        socket()->flush();
-    }
+    if (messages.isEmpty() && notices.isEmpty())
+        return;
+
+    socket()->waitForBytesWritten();
+
+    foreach (QString w, messages)
+        sendCommand(IrcCommand::createMessage(chan, w));
+    foreach (QString w, notices.keys())
+        sendCommand(IrcCommand::createNotice(w, notices.value(w)));
+
+    socket()->flush();
+    messages.clear();
+    notices.clear();
 }
 
 void UNO::command(QString nick, QString cmd, QStringList args)
@@ -400,7 +407,7 @@ void UNO::command(QString nick, QString cmd, QStringList args)
         else if (args.first() == "scores")
             sendMessage("\x02""Aide :""\x0F"" !scores : affiche le classement des joueurs");
         else
-            sendMessage("Cette commande n'existe pas, " + (players->contains(nick) ? players->get(nick)->getColoredName() : "\x02" + nick + "\x0F"));
+            sendMessage("Cette commande n'existe pas, " + users->get(nick)->getColoredName());
     }
     else if (cmd == "regles" || cmd == "rules")
         sendMessage("\x02""Règles :""\x0F"" http://tuxange.org/unorules/");
@@ -422,7 +429,6 @@ void UNO::command(QString nick, QString cmd, QStringList args)
     {
         if (args.isEmpty())
             args.append(nickName());
-        qsrand((uint)QTime::currentTime().msec());
         sendCommand(IrcCommand::createMessage(chan, "\x02" + nick + "\x0F"" " + slaps->value(QString::number(qrand() % 23)).toString().replace("%s", "\x02" + args.first() + "\x0F")));
     }
     else if (cmd == "ping")
@@ -445,16 +451,16 @@ void UNO::command(QString nick, QString cmd, QStringList args)
         if (inGame || preGame)
             sendMessage("Dans la partie: " + players->list());
         else
-            sendMessage("Il n'y a pas de partie en cours, ""\x02" + nick + "\x0F");
+            sendMessage("Il n'y a pas de partie en cours, " + users->get(nick)->getColoredName());
     }
     else if (cmd == "quitter")
     {
         if (players->contains(nick))
             remPlayer(nick);
         else if (!inGame)
-            sendMessage("Il n'y a pas de partie en cours, ""\x02" + nick + "\x0F");
+            sendMessage("Il n'y a pas de partie en cours, " + users->get(nick)->getColoredName());
         else
-            sendMessage("Vous n'êtes pas dans cette partie, ""\x02" + nick + "\x0F");
+            sendMessage("Vous n'êtes pas dans cette partie, " + users->get(nick)->getColoredName());
     }
     else if (cmd == "rejoindre")
     {
@@ -464,7 +470,6 @@ void UNO::command(QString nick, QString cmd, QStringList args)
             {
                 Player *p = new Player(nick, this);
                 players->add(p);
-                qsrand((uint)QTime::currentTime().msec());
                 turns.insert(qrand() % turns.size(), nick);
                 // turns.append(nick);
                 sendMessage(p->getColoredName() + " a rejoint la partie");
@@ -474,25 +479,23 @@ void UNO::command(QString nick, QString cmd, QStringList args)
                 sendMessage("Vous êtes déjà dans la partie, " + players->get(nick)->getColoredName());
         }
         else if (inGame)
-            sendMessage("Impossible de rejoindre une partie en cours de jeu, ""\x02" + nick + "\x0F");
+            sendMessage("Impossible de rejoindre une partie en cours de jeu, " + users->get(nick)->getColoredName());
         else
-            sendMessage("Il n'y a pas de partie en préparation, ""\x02" + nick + "\x0F");
+            sendMessage("Il n'y a pas de partie en préparation, " + users->get(nick)->getColoredName());
     }
     else if (cmd == "commencer")
     {
         if (!players->contains(nick) && preGame)
-            sendMessage("Vous n'êtes pas dans cette partie, ""\x02" + nick + "\x0F");
+            sendMessage("Vous n'êtes pas dans cette partie, " + users->get(nick)->getColoredName());
         else if (players->size() > 1 && preGame)
         {
-            QTime time = QTime::currentTime();
-            qsrand((uint)time.msec());
             int rand;
             do { rand = qrand() % cards->size() - 1; } while (cards->get(rand)->getId() == "+4");
             lastCard = cards->get(rand);
             cards->remove(rand);
             foreach (Player *w, players->getList())
                 w->getDeck()->init();
-            sendCommand(IrcCommand::createMessage(chan, " "));
+            sendMessage(" ---");
             sendMessage("Carte visible : %c", lastCard);
             currPlayer = players->rand()->getName();
 
@@ -525,7 +528,7 @@ void UNO::command(QString nick, QString cmd, QStringList args)
         else if (preGame)
             sendMessage("Il n'y a pas assez de joueurs pour commencer la partie, " + players->get(nick)->getColoredName());
         else if (inGame)
-            sendMessage("Une partie est déjà en cours, " + (players->contains(nick) ? players->get(nick)->getColoredName() : "\x02" + nick));
+            sendMessage("Une partie est déjà en cours, " + users->get(nick)->getColoredName());
         else
             sendMessage("Il n'y a pas de partie en préparation, ""\x02" + nick + "\x0F");
     }
@@ -540,16 +543,17 @@ void UNO::command(QString nick, QString cmd, QStringList args)
             sendMessage(p->getColoredName() + " a créé une nouvelle partie");
             sendMessage(p->getColoredName() + " a rejoint la partie");
             sendMessage("Il y a 1 joueur dans la partie");
+            QTimer::singleShot(60*5*1000, this, SLOT(preGameTimeout()));
         }
         else if (inGame)
-            sendMessage("Une partie est déjà en cours, " + (players->contains(nick) ? players->get(nick)->getColoredName() : "\x02" + nick + "\x0F"));
+            sendMessage("Une partie est déjà en cours, " + users->get(nick)->getColoredName());
         else // preGame
-            sendMessage("Une partie est déjà en préparation, " + (players->contains(nick) ? players->get(nick)->getColoredName() : "\x02" + nick + "\x0F"));
+            sendMessage("Une partie est déjà en préparation, " + users->get(nick)->getColoredName());
     }
     else if (cmd == "pioche")
     {
         if (!inGame)
-            sendMessage("Il n'y a pas de partie en cours, ""\x02" + nick + "\x0F");
+            sendMessage("Il n'y a pas de partie en cours, " + users->get(nick)->getColoredName());
         else if (!drawed && currPlayer == nick)
         {
             sendNotice(currPlayer, players->get(currPlayer)->getDeck()->randCards(1));
@@ -564,7 +568,7 @@ void UNO::command(QString nick, QString cmd, QStringList args)
     else if (cmd == "fin" || cmd == "f")
     {
         if (!inGame)
-            sendMessage("Il n'y a pas de partie en cours, ""\x02" + nick + "\x0F");
+            sendMessage("Il n'y a pas de partie en cours, " + users->get(nick)->getColoredName());
         else if (drawed && currPlayer == nick)
             end = true;
         else if (currPlayer == nick)
@@ -575,9 +579,9 @@ void UNO::command(QString nick, QString cmd, QStringList args)
     else if (cmd == "main")
     {
         if (!inGame)
-            sendMessage("Il n'y a pas de partie en cours, ""\x02" + nick + "\x0F");
+            sendMessage("Il n'y a pas de partie en cours, " + users->get(nick)->getColoredName());
         else if (!isOp(nick) && !args.isEmpty())
-            sendMessage("Vous n'avez pas le droit de voir les cartes des autres joueurs, " + (players->contains(nick) ? players->get(nick)->getColoredName() : "\x02" + nick + "\x0F"));
+            sendMessage("Vous n'avez pas le droit de voir les cartes des autres joueurs, " + users->get(nick)->getColoredName());
         else if (args.isEmpty())
         {
             sendMessage("Carte visible : %c", lastCard);
@@ -589,14 +593,14 @@ void UNO::command(QString nick, QString cmd, QStringList args)
             if (players->contains(args.at(0)))
                 showCards(args.at(0), nick);
             else
-                sendMessage("Impossible de trouver ""\x02" + args.at(0) + ", " + (players->contains(nick) ? players->get(nick)->getColoredName() : "\x02" + nick + "\x0F"));
+                sendMessage("Impossible de trouver ""\x02" + args.at(0) + ", " + users->get(nick)->getColoredName());
             flushMessages();
         }
     }
     else if (cmd == "cartes")
     {
         if (!inGame)
-            sendMessage("Il n'y a pas de partie en cours, ""\x02" + nick + "\x0F");
+            sendMessage("Il n'y a pas de partie en cours, " + users->get(nick)->getColoredName());
         else
         {
             sendMessage("Il reste " + QString::number(cards->size()) + " cartes à piocher");
@@ -608,7 +612,7 @@ void UNO::command(QString nick, QString cmd, QStringList args)
     {
         Player *curr = players->get(currPlayer);
         if (!inGame)
-            sendMessage("Il n'y a pas de partie en cours, ""\x02" + nick + "\x0F");
+            sendMessage("Il n'y a pas de partie en cours, " + users->get(nick)->getColoredName());
         else if (currPlayer != nick)
             sendMessage("C'est au tour de " + curr->getColoredName());
         else if (args.size() < 2)
@@ -628,8 +632,6 @@ void UNO::command(QString nick, QString cmd, QStringList args)
                     }
                     else if (id == "+4")
                     {
-                        // if (curr->getDeck()->containsId((lastCard->getId() == "+4" ? "" : lastCard->getId())) || curr->getDeck()->containsColor(lastCard->getColor()))
-                        //    curr->bluffing();
                         if (cards->size() >= 4)
                         {
                             lastCard = new Card(color, id);
@@ -731,6 +733,7 @@ void UNO::command(QString nick, QString cmd, QStringList args)
         foreach (Player *w, players->getList())
             scores->setValue("Total/" + w->getName(), scores->value("Total/" + w->getName(), 0).toInt() + 1);
 
+        sendMessage(" ---");
         showScores();
         flushMessages();
         clear();
@@ -747,6 +750,7 @@ void UNO::command(QString nick, QString cmd, QStringList args)
         foreach (Player *w, players->getList())
             scores->setValue("Total/" + w->getName(), scores->value("Total/" + w->getName(), 0).toInt() + 1);
 
+        sendMessage(" ---");
         showScores();
         flushMessages();
         clear();
@@ -760,7 +764,7 @@ void UNO::command(QString nick, QString cmd, QStringList args)
         if (!players->get(currPlayer)->canPlay())
         {
             sendMessage(players->get(currPlayer)->getColoredName() + " passe son tour");
-            sendCommand(IrcCommand::createMessage(chan, " "));
+            sendMessage(" ---");
             sendMessage("Carte visible : %c", lastCard);
             currPlayer = nextPlayer();
             sendMessage("C'est au tour de " + players->get(currPlayer)->getColoredName());
@@ -768,7 +772,7 @@ void UNO::command(QString nick, QString cmd, QStringList args)
         }
         else
         {
-            sendCommand(IrcCommand::createMessage(chan, " "));
+            sendMessage(" ---");
             sendMessage("Carte visible : %c", lastCard);
             sendMessage("C'est au tour de " + players->get(currPlayer)->getColoredName());
             showCards();
@@ -780,6 +784,12 @@ void UNO::command(QString nick, QString cmd, QStringList args)
 
 void UNO::showScores()
 {
+    if (scores->allKeys().isEmpty())
+    {
+        sendMessage("Aucune partie n'a été jouée, le classement commencera à la fin de la première partie");
+        return;
+    }
+
     sendMessage("Classement :");
     QStringList people = scores->allKeys();
 
@@ -789,21 +799,25 @@ void UNO::showScores()
 
     QString curr;
     int currcount = 0;
+    int currperc = 0;
 
     for (int i = 0; i < 10; i++)
     {
+        curr = "";
         currcount = 0;
+        currperc = 0;
         foreach (QString w, people)
-            if (scores->value(w).toInt() > currcount)
+            if (scores->value(w).toInt() >= currcount && ((scores->value(w).toInt() * 100) / scores->value("Total/" + w).toInt()) >= currperc)
             {
                 curr = w;
                 currcount = scores->value(w).toInt();
+                currperc = (scores->value(w).toInt() * 100) / scores->value("Total/" + w).toInt();
             }
         sendMessage(QString::number(i + 1) + ". " + (users->contains(curr) ? users->get(curr)->getColoredName() : "\x02" + curr + "\x0F") + " : " + scores->value(curr).toString() + " victoire" + (scores->value(curr).toInt() > 1 ? "s" : "") + " sur " + scores->value("Total/" + curr).toString() + " partie" + (scores->value("Total/" + curr).toInt() > 1 ? "s" : "") + " (" + QString::number((short)((scores->value(curr).toInt() * 100) / scores->value("Total/" + curr).toInt())) + "%)");
         people.removeOne(curr);
 
         if (people.isEmpty())
-            i = 10; // break;
+            break;
     }
 
     flushMessages();

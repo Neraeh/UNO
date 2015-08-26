@@ -38,6 +38,7 @@ public slots:
 private slots:
     void pingTimeout();
     void versionTimeout(QString nick);
+    void preGameTimeout();
 
 private:
     void showCards(QString nick = QString(), QString to = QString());
