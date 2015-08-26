@@ -37,8 +37,8 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    content << origContent.replace("reply = QLatin1String(\"VERSION libcommuni \") + Irc::version() + QLatin1String(\" - https://communi.github.io\");",
-                                   "reply = QString(\"VERSION UNO par Shayy, basé sur la version Java de Feeling [libcommuni \") + Irc::version() + QString(\" - https://communi.github.io]\");");
+    content << origContent.replace("reply = QLatin1String(\"VERSION Communi \") + Irc::version() + QLatin1String(\" - https://communi.github.io\");\");",
+                                   "reply = QString(\"VERSION UNO par Shayy, basé sur la version Java de Feeling [Communi \") + Irc::version() + QString(\" - https://communi.github.io]\");");
     file->waitForBytesWritten(-1);
     file->close();
     delete file;
