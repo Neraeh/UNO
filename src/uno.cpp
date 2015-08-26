@@ -168,7 +168,7 @@ void UNO::onNotice(IrcNoticeMessage *message)
                 green.append(" ");
             while (red.length() + green.length() < 49)
                 red.append(" ");
-            sendCommand(IrcCommand::createMessage(chan, "\x03""01,03" + green + "\x03""01,04" + red + "\x0F"" ""\x02" + currPing + "\x0F"": " + QString::number(pingTime) + "ms"));
+            sendCommand(IrcCommand::createMessage(chan, "\x03""01,03" + green + "\x03""01,04" + red + "\x0F"" " + users->get(currPing)->getColoredName() + ": " + QString::number(pingTime) + "ms"));
             currPing = "";
             pingTime = 10000000;
             pingCount = 0;
@@ -314,8 +314,10 @@ void UNO::command(QString nick, QString cmd, QStringList args)
 
     if (isOp(nick))
     {
-        if (cmd == "exit")
-            qApp->quit();
+        if (cmd == "exit" && args.isEmpty())
+            qApp->exit();
+        else if (cmd == "exit")
+            qApp->exit(args.first().toInt());
         else if (cmd == "sendraw")
             sendRaw(args.join(" "));
         else if (cmd == "kick" && !args.isEmpty())
@@ -429,7 +431,7 @@ void UNO::command(QString nick, QString cmd, QStringList args)
     {
         if (args.isEmpty())
             args.append(nickName());
-        sendCommand(IrcCommand::createMessage(chan, "\x02" + nick + "\x0F"" " + slaps->value(QString::number(qrand() % 23)).toString().replace("%s", "\x02" + args.first() + "\x0F")));
+        sendCommand(IrcCommand::createMessage(chan, "\x02""\x03""00,14" + users->get(nick)->getColoredName() + " " + slaps->value(QString::number(qrand() % slaps->allKeys().size())).toString().replace("%s", (users->contains(args.first()) ? users->get(args.first())->getColoredName() : "\x03""04,15" + args.first() + "\x03""00,14"))));
     }
     else if (cmd == "ping")
     {
@@ -495,7 +497,7 @@ void UNO::command(QString nick, QString cmd, QStringList args)
             cards->remove(rand);
             foreach (Player *w, players->getList())
                 w->getDeck()->init();
-            sendMessage(" ---");
+            sendMessage(" --- ");
             sendMessage("Carte visible : %c", lastCard);
             currPlayer = players->rand()->getName();
 
@@ -733,7 +735,7 @@ void UNO::command(QString nick, QString cmd, QStringList args)
         foreach (Player *w, players->getList())
             scores->setValue("Total/" + w->getName(), scores->value("Total/" + w->getName(), 0).toInt() + 1);
 
-        sendMessage(" ---");
+        sendMessage(" --- ");
         showScores();
         flushMessages();
         clear();
@@ -750,7 +752,7 @@ void UNO::command(QString nick, QString cmd, QStringList args)
         foreach (Player *w, players->getList())
             scores->setValue("Total/" + w->getName(), scores->value("Total/" + w->getName(), 0).toInt() + 1);
 
-        sendMessage(" ---");
+        sendMessage(" --- ");
         showScores();
         flushMessages();
         clear();
@@ -764,7 +766,7 @@ void UNO::command(QString nick, QString cmd, QStringList args)
         if (!players->get(currPlayer)->canPlay())
         {
             sendMessage(players->get(currPlayer)->getColoredName() + " passe son tour");
-            sendMessage(" ---");
+            sendMessage(" --- ");
             sendMessage("Carte visible : %c", lastCard);
             currPlayer = nextPlayer();
             sendMessage("C'est au tour de " + players->get(currPlayer)->getColoredName());
@@ -772,7 +774,7 @@ void UNO::command(QString nick, QString cmd, QStringList args)
         }
         else
         {
-            sendMessage(" ---");
+            sendMessage(" --- ");
             sendMessage("Carte visible : %c", lastCard);
             sendMessage("C'est au tour de " + players->get(currPlayer)->getColoredName());
             showCards();
