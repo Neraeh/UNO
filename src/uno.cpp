@@ -847,7 +847,7 @@ void UNO::showScores()
         ratio = 0;
         foreach (QString w, people)
         {
-            currratio = (scores->value("Points/" + w).toInt() / scores->value(w).toInt()) * ((scores->value(w).toInt() * 10 / scores->value("Total/" + w).toInt())) / 10;
+            currratio = ((scores->value("Points/" + w).toInt()/6) + (scores->value(w).toInt()*105/scores->value("Total/" + w).toInt()) + (scores->value(w).toInt()*8)) / 8;
             if (currratio > ratio)
             {
                 curr = w;
