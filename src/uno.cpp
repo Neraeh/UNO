@@ -838,8 +838,8 @@ void UNO::showScores()
             people.removeOne(w);
 
     QString curr;
-    int ratio = 0;
-    int currratio;
+    double ratio = 0;
+    double currratio;
 
     for (int i = 0; i < 10; i++)
     {
@@ -854,7 +854,7 @@ void UNO::showScores()
                 ratio = currratio;
             }
         }
-        sendMessage(QString::number(i + 1) + ". " + (users->contains(curr) ? users->get(curr)->getColoredName() : "\x02" + curr + "\x0F") + " : " + QString::number(ratio) + " (" + scores->value("Points/" + curr).toString() + " points sur " + scores->value(curr).toString() + " victoire" + (scores->value(curr).toInt() > 1 ? "s" : "") + " pour " + scores->value("Total/" + curr).toString() + " partie" + (scores->value("Total/" + curr).toInt() > 1 ? "s" : "") + " jouée" + (scores->value("Total/" + curr).toInt() > 1 ? "s" : "") + ")");
+        sendMessage(QString::number(i + 1) + ". " + (users->contains(curr) ? users->get(curr)->getColoredName() : "\x02" + curr + "\x0F") + " : " + QString::number((int)ratio) + " (" + scores->value("Points/" + curr).toString() + " points sur " + scores->value(curr).toString() + " victoire" + (scores->value(curr).toInt() > 1 ? "s" : "") + " pour " + scores->value("Total/" + curr).toString() + " partie" + (scores->value("Total/" + curr).toInt() > 1 ? "s" : "") + " jouée" + (scores->value("Total/" + curr).toInt() > 1 ? "s" : "") + ")");
         people.removeOne(curr);
 
         if (people.isEmpty())
