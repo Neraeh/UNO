@@ -845,12 +845,12 @@ void UNO::showScores()
         curr = "";
         ratio = 0;
         foreach (QString w, people)
-            if (scores->value("Points/" + w).toInt() / scores->value(w).toInt() > ratio)
+            if (((scores->value("Points/" + w).toInt() * 10) / scores->value(w).toInt()) * (10 + (scores->value(w).toInt() * 10 / scores->value("Total/" + w).toInt())) / 10 > ratio)
             {
                 curr = w;
-                ratio = scores->value("Points/" + w).toInt() / scores->value(w).toInt();
+                ratio = ((scores->value("Points/" + w).toInt() * 10) / scores->value(w).toInt()) * (10 + (scores->value(w).toInt() * 10 / scores->value("Total/" + w).toInt())) / 10;
             }
-        sendMessage(QString::number(i + 1) + ". " + (users->contains(curr) ? users->get(curr)->getColoredName() : "\x02" + curr + "\x0F") + " : " + QString::number(ratio) + " points par victoire (" + scores->value("Points/" + curr).toString() + " points sur " + scores->value(curr).toString() + " victoire" + (scores->value(curr).toInt() > 1 ? "s" : "") + " pour " + scores->value("Total/" + curr).toString() + " partie" + (scores->value("Total/" + curr).toInt() > 1 ? "s" : "") + " jouée" + (scores->value("Total/" + curr).toInt() > 1 ? "s" : "") + ")");
+        sendMessage(QString::number(i + 1) + ". " + (users->contains(curr) ? users->get(curr)->getColoredName() : "\x02" + curr + "\x0F") + " : " + QString::number(ratio) + " points (" + scores->value("Points/" + curr).toString() + " points sur " + scores->value(curr).toString() + " victoire" + (scores->value(curr).toInt() > 1 ? "s" : "") + " pour " + scores->value("Total/" + curr).toString() + " partie" + (scores->value("Total/" + curr).toInt() > 1 ? "s" : "") + " jouée" + (scores->value("Total/" + curr).toInt() > 1 ? "s" : "") + ")");
         people.removeOne(curr);
 
         if (people.isEmpty())
