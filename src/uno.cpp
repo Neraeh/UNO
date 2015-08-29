@@ -224,7 +224,7 @@ void UNO::showCards(QString nick, QString to)
     sendNotice(to, players->get(nick)->getDeck()->toString(users->get(nick)->getColored()));
 }
 
-QString UNO::nextPlayer()
+QString UNO::nextPlayer() const
 {
     if (turns.indexOf(currPlayer) + (inversed ? -1 : 1) > turns.size() -1 || turns.indexOf(currPlayer) + (inversed ? -1 : 1) < 0)
         return inversed ? turns.last() : turns.first();
@@ -457,7 +457,7 @@ void UNO::command(QString nick, QString cmd, QStringList args)
     else if (cmd == "liste" || cmd == "list")
     {
         if (inGame || preGame)
-            sendMessage("Dans la partie: " + players->list());
+            sendMessage("Dans la partie: " + inGame ? showTurns() : players->list());
         else
             sendMessage("Il n'y a pas de partie en cours, " + users->get(nick)->getColoredName());
     }
@@ -820,6 +820,15 @@ void UNO::command(QString nick, QString cmd, QStringList args)
     }
 
     flushMessages();
+}
+
+QString UNO::showTurns() const
+{
+    QString ret;
+    foreach (QString w, turns)
+        ret += players->get(w)->getColoredName() + ", ";
+    ret.chop(2);
+    return ret;
 }
 
 void UNO::showScores()

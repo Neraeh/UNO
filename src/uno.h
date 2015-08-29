@@ -43,13 +43,14 @@ private slots:
 
 private:
     void showCards(QString nick = QString(), QString to = QString());
-    QString nextPlayer();
+    QString nextPlayer() const;
     void remPlayer(QString nick);
     void clear();
     void sendNotice(QString target, QString message);
     void sendMessage(QString message, Card* card = 0);
     void flushMessages();
     void command(QString nick, QString cmd, QStringList args);
+    QString showTurns() const;
     void showScores();
     bool isOp(QString user);
     bool startsWithMode(QString nick);
