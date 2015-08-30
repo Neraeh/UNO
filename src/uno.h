@@ -23,6 +23,7 @@ public:
     ~UNO();
     Cards* getCards() const;
     Users* getUsers() const;
+    Players* getPlayers() const;
 
 public slots:
     void onConnect();
@@ -56,7 +57,7 @@ private:
     bool startsWithMode(QString nick);
 
 private:
-    Cards *cards;
+    Cards *pick;
     Players *players;
     QList<QString> turns, messages;
     QHash<QString,QString> notices;

@@ -8,11 +8,7 @@ Deck::Deck(UNO *_parent)
 void Deck::init()
 {
     while (cards.size() < 7)
-    {
-        int rand = qrand() % parent->getCards()->size();
-        cards.append(parent->getCards()->get(rand));
-        parent->getCards()->remove(rand);
-    }
+        cards.append(parent->getCards()->pick());
 }
 
 QString Deck::randCards(int _count, bool colored)
@@ -20,10 +16,9 @@ QString Deck::randCards(int _count, bool colored)
     QString newCards = "+ ";
     for (int i = 0; i < _count; i++)
     {
-        int rand = qrand() % parent->getCards()->size();
-        cards.append(parent->getCards()->get(rand));
-        newCards += parent->getCards()->get(rand)->toString(colored) + " ";
-        parent->getCards()->remove(rand);
+        Card* newCard = parent->getCards()->pick();
+        cards.append(newCard);
+        newCards += newCard->toString(colored) + " ";
     }
     return newCards;
 }

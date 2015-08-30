@@ -1,7 +1,9 @@
 #include "cards.h"
 
-Cards::Cards()
+Cards::Cards(UNO *_parent)
 {
+    parent = _parent;
+
     cards.append(new Card("R", "0"));
     cards.append(new Card("R", "1"));
     cards.append(new Card("R", "1"));
@@ -122,9 +124,50 @@ int Cards::size() const
     return cards.size();
 }
 
-void Cards::remove(int i)
+Card* Cards::first() const
 {
-    cards.removeAt(i);
+    return cards.first();
+}
+
+Card* Cards::last() const
+{
+    return cards.last();
+}
+
+void Cards::randomize()
+{
+    QList<Card*> temp;
+    foreach (Card *w, cards)
+    {
+        temp.insert(temp.isEmpty() ? 0 : qrand() % temp.size(), w);
+        cards.removeOne(w);
+    }
+
+    cards = temp;
+}
+
+Card* Cards::pick(Card *_card)
+{
+    Card *ret = _card == 0 ? cards.first() : _card;
+    picked.append(ret);
+    cards.removeOne(ret);
+
+    if (cards.isEmpty())
+    {
+        while (!picked.isEmpty())
+        {
+            cards.append(picked.first());
+            picked.removeOne(picked.first());
+        }
+
+        foreach (Player *w, parent->getPlayers()->getList())
+            foreach (Card *c, w->getDeck()->getList())
+                foreach (Card *i, cards)
+                    if (i->getId() == c->getId() && i->getColor() == c->getColor())
+                        cards.removeOne(i);
+    }
+
+    return ret;
 }
 
 bool Cards::isEmpty() const

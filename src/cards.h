@@ -1,20 +1,25 @@
 #ifndef CARDS_H
 #define CARDS_H
 
-#include <QList>
-#include "card.h"
+#include "uno.h"
 
+class UNO;
+class Card;
 class Cards
 {
 public:
-    explicit Cards();
+    explicit Cards(UNO *_parent);
     Card* get(int i) const;
     int size() const;
-    void remove(int i);
+    Card* first() const;
+    Card* last() const;
+    void randomize();
+    Card *pick(Card* _card = 0);
     bool isEmpty() const;
 
 private:
-    QList<Card*> cards;
+    UNO *parent;
+    QList<Card*> cards, picked;
 };
 
 #endif // CARDS_H

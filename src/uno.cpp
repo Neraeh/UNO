@@ -4,7 +4,7 @@ UNO::UNO(QCoreApplication *_parent) : IrcConnection(_parent)
 {
     qsrand(QTime::currentTime().msec());
 
-    cards = new Cards;
+    pick = new Cards(this);
     players = new Players;
     users = new Users;
     lastCard = new Card("", "");
@@ -57,7 +57,7 @@ UNO::~UNO()
     slaps->sync();
     colors->sync();
     scores->sync();
-    delete cards;
+    delete pick;
     delete players;
     delete users;
     delete lastCard;
@@ -268,8 +268,8 @@ void UNO::clear()
     preGame = false;
     drawed = false;
     inversed = false;
-    delete cards;
-    cards = new Cards();
+    delete pick;
+    pick = new Cards(this);
 }
 
 void UNO::sendNotice(QString target, QString message)
@@ -497,10 +497,8 @@ void UNO::command(QString nick, QString cmd, QStringList args)
             sendMessage("Vous n'êtes pas dans cette partie, " + users->get(nick)->getColoredName());
         else if (players->size() > 1 && preGame)
         {
-            int rand;
-            do { rand = qrand() % cards->size() - 1; } while (cards->get(rand)->getId() == "+4");
-            lastCard = cards->get(rand);
-            cards->remove(rand);
+            pick->randomize();
+            do { lastCard = pick->pick(); } while (lastCard->getId() == "+4");
             foreach (Player *w, players->getList())
                 w->getDeck()->init();
             sendMessage(" --- ");
@@ -611,7 +609,7 @@ void UNO::command(QString nick, QString cmd, QStringList args)
             sendMessage("Il n'y a pas de partie en cours, " + users->get(nick)->getColoredName());
         else
         {
-            sendMessage("Il reste " + QString::number(cards->size()) + " cartes à piocher");
+            sendMessage("Il reste " + QString::number(pick->size()) + " cartes à piocher");
             foreach (Player *w, players->getList())
                 sendMessage(w->getColoredName() + " a " + QString::number(w->getDeck()->size()) + " cartes");
         }
@@ -640,47 +638,23 @@ void UNO::command(QString nick, QString cmd, QStringList args)
                     }
                     else if (id == "+4")
                     {
-                        if (cards->size() >= 4)
-                        {
-                            lastCard = new Card(color, id);
-                            curr->getDeck()->remCard("N", id);
-                            Player *next = players->get(nextPlayer());
-                            sendMessage(next->getColoredName() + " pioche 4 cartes");
-                            sendNotice(next->getName(), next->getDeck()->randCards(4, users->get(next->getName())->getColored()));
-                            next->cantPlay();
-                            end = true;
-                        }
-                        else
-                        {
-                            lastCard = new Card(color, id);
-                            curr->getDeck()->remCard("N", id);
-                            Player *next = players->get(nextPlayer());
-                            sendMessage(next->getColoredName() + " pioche " + QString::number(cards->size()) + " cartes");
-                            sendNotice(next->getName(), next->getDeck()->randCards(cards->size(), users->get(next->getName())->getColored()));
-                            end = true;
-                        }
+                        lastCard = new Card(color, id);
+                        curr->getDeck()->remCard("N", id);
+                        Player *next = players->get(nextPlayer());
+                        sendMessage(next->getColoredName() + " pioche 4 cartes");
+                        sendNotice(next->getName(), next->getDeck()->randCards(4, users->get(next->getName())->getColored()));
+                        next->cantPlay();
+                        end = true;
                     }
                     else if (id == "+2")
                     {
-                        if (cards->size() >= 2)
-                        {
-                            Player *next = players->get(nextPlayer());
-                            sendMessage(next->getColoredName() + " pioche 2 cartes");
-                            sendNotice(next->getName(), next->getDeck()->randCards(2, users->get(next->getName())->getColored()));
-                            next->cantPlay();
-                            lastCard = new Card(color, id);
-                            curr->getDeck()->remCard(color, id);
-                            end = true;
-                        }
-                        else
-                        {
-                            lastCard = new Card(color, id);
-                            curr->getDeck()->remCard("N", id);
-                            Player *next = players->get(nextPlayer());
-                            sendMessage(next->getColoredName() + " pioche " + QString::number(cards->size()) + " cartes");
-                            sendNotice(next->getName(), next->getDeck()->randCards(cards->size(), users->get(next->getName())->getColored()));
-                            end = true;
-                        }
+                        Player *next = players->get(nextPlayer());
+                        sendMessage(next->getColoredName() + " pioche 2 cartes");
+                        sendNotice(next->getName(), next->getDeck()->randCards(2, users->get(next->getName())->getColored()));
+                        next->cantPlay();
+                        lastCard = new Card(color, id);
+                        curr->getDeck()->remCard(color, id);
+                        end = true;
                     }
                     else if (id == "I")
                     {
@@ -721,49 +695,7 @@ void UNO::command(QString nick, QString cmd, QStringList args)
         }
     }
 
-    if (end && cards->isEmpty())
-    {
-        sendMessage("La pioche est vide");
-        Player *winner = players->get(currPlayer);
-        int minCards = 100;
-        foreach (Player *w, players->getList())
-        {
-            if (w->getDeck()->size() < minCards)
-            {
-                minCards = w->getDeck()->size();
-                winner = w;
-            }
-        }
-        sendMessage(winner->getColoredName() + " a gagné la partie !");
-
-        scores->setValue(currPlayer, scores->value(currPlayer, 0).toInt() + 1);
-        int points = scores->value("Points/" + currPlayer, 0).toInt(), origpoints = points;
-
-        foreach (Player *w, players->getList())
-        {
-            scores->setValue("Total/" + w->getName(), scores->value("Total/" + w->getName(), 0).toInt() + 1);
-            if (w->getName() != currPlayer)
-                foreach (Card *c, w->getDeck()->getList())
-                {
-                    if (c->getId() == "+4" || c->getId() == "J")
-                        points += 50;
-                    else if (c->getId() == "I" || c->getId() == "P" || c->getId() == "+2")
-                        points += 20;
-                    else
-                        points += c->getId().toInt();
-                }
-        }
-
-        scores->setValue("Points/" + currPlayer, points);
-        sendMessage(players->get(currPlayer)->getColoredName() + " a gagné " + QString::number(points - origpoints) + " points !");
-
-        sendMessage(" --- ");
-        showScores();
-        flushMessages();
-        clear();
-        return;
-    }
-    else if (end && players->get(currPlayer)->getDeck()->size() == 1)
+    if (end && players->get(currPlayer)->getDeck()->size() == 1)
         sendMessage(players->get(currPlayer)->getColoredName() + " ""\x16""est en ""\x03""01,15[""\x02""\x03""04,15UNO""\x0F""\x03""01,15]""\x02""\x03""00,14""\x16"" !");
     else if (end && players->get(currPlayer)->getDeck()->size() == 0)
     {
@@ -847,13 +779,13 @@ void UNO::showScores()
             people.removeOne(w);
 
     QString curr;
-    double ratio = 0;
+    double ratio = -1;
     double currratio;
 
     for (int i = 0; i < 10; i++)
     {
         curr = "";
-        ratio = 0;
+        ratio = -1;
         foreach (QString w, people)
         {
             currratio = ((scores->value("Points/" + w).toInt()/6) + (scores->value(w).toInt()*105/scores->value("Total/" + w).toInt()) + (scores->value(w).toInt()*8)) / 4;
@@ -888,10 +820,15 @@ bool UNO::startsWithMode(QString nick)
 
 Cards* UNO::getCards() const
 {
-    return cards;
+    return pick;
 }
 
 Users* UNO::getUsers() const
 {
     return users;
+}
+
+Players* UNO::getPlayers() const
+{
+    return players;
 }
