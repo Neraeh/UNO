@@ -691,7 +691,12 @@ void UNO::command(QString nick, QString cmd, QStringList args)
         }
         else
         {
-            sendMessage("Vous n'avez pas cette carte ou elle n'existe pas, " + curr->getColoredName());
+            bool ok;
+            QString color = QString(args.at(0)).toUpper(), id = QString(args.at(1)).toUpper();
+            if (((id == "+2" || id == "I" || id == "P" || (id.toInt(&ok, 10) < 10 && ok)) || (id == "+4" || id == "J")) && (color == "R" || color == "V" || color == "B" || color == "J"))
+                sendMessage("Vous n'avez pas cette carte, " + curr->getColoredName());
+            else
+                sendMessage("Cette carte n'existe pas, " + curr->getColoredName());
         }
     }
 
