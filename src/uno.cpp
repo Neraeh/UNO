@@ -78,6 +78,8 @@ void UNO::onMessage(IrcPrivateMessage *message)
 {
     if (message->target() == nickName() || message->isOwn())
         return;
+    else if (message->host() == "just.do.it")
+        return;
     else if (message->content().startsWith("!"))
     {
         QStringList args = message->content().split(" ", QString::SkipEmptyParts);
