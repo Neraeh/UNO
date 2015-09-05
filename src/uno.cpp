@@ -538,7 +538,7 @@ void UNO::command(QString nick, QString cmd, QStringList args)
         else if (inGame)
             sendMessage("Une partie est déjà en cours, " + users->get(nick)->getColoredName());
         else
-            sendMessage("Il n'y a pas de partie en préparation, ""\x02" + nick + "\x0F");
+            sendMessage("Il n'y a pas de partie en préparation, " + users->get(nick)->getColoredName());
     }
     else if (cmd == "uno")
     {
