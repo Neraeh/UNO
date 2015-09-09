@@ -59,14 +59,14 @@ private:
 private:
     Cards *pick;
     Players *players;
-    QList<QString> turns, messages;
+    QStringList turns, messages;
     QHash<QString,QString> notices;
     Card *lastCard;
     QString currPlayer, currPing, chan;
     Users *users;
     bool inGame, preGame, drawed, inversed, inPing, inVersion;
     unsigned int pingTimeBegin, pingTime, pingCount;
-    QSettings *settings, *slaps, *colors, *scores;
+    QSettings *settings, *slaps, *colors, *scores, *bans;
 };
 
 #endif // UNO_H

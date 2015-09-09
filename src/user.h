@@ -11,16 +11,18 @@ public:
     explicit User(QString _nick, QString _mode = QString());
     QString getNick() const;
     QString getMode() const;
+    QString getHostname() const;
     bool getColored() const;
     unsigned short getColor() const;
     QString getColoredName() const;
     void setNick(QString _nick);
     void setMode(QString _mode);
+    void setHostname(QString _hostname);
     void setColored(bool _colored);
     void setColor(unsigned short _color);
 
 private:
-    QString nick, mode;
+    QString nick, mode, hostname;
     bool colored;
     unsigned short color;
 };

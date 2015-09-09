@@ -10,16 +10,19 @@ UNO::UNO(QCoreApplication *_parent) : IrcConnection(_parent)
     lastCard = new Card("", "");
     inGame = false, preGame = false, drawed = false, inversed = false, inPing = false, inVersion = false;
 
-    settings = new QSettings(qApp->applicationDirPath() + "/ini/settings.ini", QSettings::IniFormat);
+    settings = new QSettings(qApp->applicationDirPath() + "/UNObox/settings.ini", QSettings::IniFormat);
     settings->setIniCodec("UTF-8");
 
-    slaps = new QSettings(qApp->applicationDirPath() + "/ini/slaps.ini", QSettings::IniFormat);
+    slaps = new QSettings(qApp->applicationDirPath() + "/UNObox/slaps.ini", QSettings::IniFormat);
     slaps->setIniCodec("UTF-8");
 
-    colors = new QSettings(qApp->applicationDirPath() + "/ini/colors.ini", QSettings::IniFormat);
+    colors = new QSettings(qApp->applicationDirPath() + "/UNObox/colors.ini", QSettings::IniFormat);
     colors->setIniCodec("UTF-8");
 
-    scores = new QSettings(qApp->applicationDirPath() + "/ini/scores.ini", QSettings::IniFormat);
+    scores = new QSettings(qApp->applicationDirPath() + "/UNObox/scores.ini", QSettings::IniFormat);
+    scores->setIniCodec("UTF-8");
+
+    bans = new QSettings(qApp->applicationDirPath() + "/UNObox/bans.ini", QSettings::IniFormat);
     scores->setIniCodec("UTF-8");
 
     qputenv("IRC_DEBUG", settings->value("debug", "0").toByteArray());
@@ -65,6 +68,7 @@ UNO::~UNO()
     delete slaps;
     delete colors;
     delete scores;
+    delete bans;
 }
 
 void UNO::onConnect()
@@ -76,9 +80,14 @@ void UNO::onConnect()
 
 void UNO::onMessage(IrcPrivateMessage *message)
 {
+    users->get(message->nick())->setHostname(message->host());
+    foreach (QString w, bans->allKeys())
+        if (bans->value(w) == message->host())
+            return;
+
     if (message->target() == nickName() || message->isOwn())
         return;
-    else if (message->host() == "just.do.it")
+    else if (bans->allKeys().contains(message->nick()))
         return;
     else if (message->content().startsWith("!"))
     {
@@ -320,16 +329,40 @@ void UNO::command(QString nick, QString cmd, QStringList args)
             qApp->exit();
         else if (cmd == "exit")
             qApp->exit(args.first().toInt());
+        #ifndef Q_OS_WIN
         else if (cmd == "update")
         {
             sendMessage("Mise à jour de " + nickName());
-            QProcess::startDetached(qApp->applicationDirPath() + "/updateUNO");
-            qApp->exit();
+            if (QProcess::startDetached(qApp->applicationDirPath() + "/updateUNO"))
+                qApp->exit();
+            else
+                sendMessage("Impossible de lancer le script updateUNO");
         }
+        #endif
         else if (cmd == "sendraw")
             sendRaw(args.join(" "));
         else if (cmd == "kick" && !args.isEmpty())
             remPlayer(args.first());
+        else if (cmd == "ban" && !args.isEmpty())
+        {
+            if (users->contains(args.first()))
+            {
+                bans->setValue(args.first(), users->get(args.first())->getHostname());
+                sendMessage(users->get(args.first())->getColoredName() + " a été banni");
+            }
+            else
+                sendMessage("\x02" + args.first() + "\x0F"" n'a pas été trouvé");
+        }
+        else if (cmd == "deban" && !args.isEmpty())
+        {
+            if (users->contains(args.first()))
+            {
+                bans->remove(args.first());
+                sendMessage(users->get(args.first())->getColoredName() + " a été débanni");
+            }
+            else
+                sendMessage("\x02" + args.first() + "\x0F"" n'a pas été trouvé");
+        }
     }
     else if (cmd == "op")
         sendCommand(IrcCommand::createMessage("NickServ", "STATUS " + nick));

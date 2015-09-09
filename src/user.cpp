@@ -21,6 +21,11 @@ QString User::getMode() const
     return mode;
 }
 
+QString User::getHostname() const
+{
+    return hostname;
+}
+
 bool User::getColored() const
 {
     return colored;
@@ -44,6 +49,11 @@ void User::setNick(QString _nick)
 void User::setMode(QString _mode)
 {
     mode = _mode;
+}
+
+void User::setHostname(QString _hostname)
+{
+    hostname = _hostname;
 }
 
 void User::setColored(bool _colored)
