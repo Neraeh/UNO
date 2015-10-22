@@ -1,5 +1,5 @@
 #!/bin/bash
-
+export QT_SELECT=5
 echo -- Downloading git repository...
 if [ ! -d "git" ]; then
         mkdir git
@@ -14,7 +14,7 @@ cd UNO
 ./configure
 echo -- Launching make...
 cd src
-QT_SELECT=5 make -j`nproc`
+make -j`nproc`
 echo -- Killing UNO...
 killall .startUNO
 killall UNO
