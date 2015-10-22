@@ -14,12 +14,12 @@ cd UNO
 ./configure
 echo -- Launching make...
 cd src
-make -j`nproc`
+QT_SELECT=5 make -j`nproc`
 echo -- Killing UNO...
 killall .startUNO
 killall UNO
 echo -- Replacing with the new one...
-cp -f ./UNO ../../../
+cp -f ./{UNO,startUNO,updateUNO} ../../../
 echo -- Launching UNO...
 cd ../../..
 ./startUNO

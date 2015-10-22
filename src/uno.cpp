@@ -42,8 +42,8 @@ UNO::UNO(QCoreApplication *_parent) : IrcConnection(_parent)
     setReconnectDelay(5);
 
     QVariantMap CtcpReplies;
-    CtcpReplies.insert("VERSION", "VERSION UNO [Update "COMMITDATE"]");
-    CtcpReplies.insert("SOURCE", "SOURCE https://github.com/TheShayy/UNO");
+    CtcpReplies.insert("VERSION", "UNO [Update "COMMITDATE"]");
+    CtcpReplies.insert("SOURCE", "https://github.com/TheShayy/UNO");
     setCtcpReplies(CtcpReplies);
 
     open();
