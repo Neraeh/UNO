@@ -1,4 +1,5 @@
 #include "uno.h"
+#include "commit_date.h"
 
 UNO::UNO(QCoreApplication *_parent) : IrcConnection(_parent)
 {
@@ -25,15 +26,25 @@ UNO::UNO(QCoreApplication *_parent) : IrcConnection(_parent)
     bans = new QSettings(qApp->applicationDirPath() + "/UNObox/bans.ini", QSettings::IniFormat);
     scores->setIniCodec("UTF-8");
 
+    accesslist = new QSettings(qApp->applicationDirPath() + "/UNObox/accesslist.ini", QSettings::IniFormat);
+    accesslist->setIniCodec("UTF-8");
+
     qputenv("IRC_DEBUG", settings->value("debug", "0").toByteArray());
 
-    setServers(QStringList(settings->value("server", "irc.t411.io").toString()));
-    chan = (settings->value("chan", "#uno").toString().startsWith("#") ? "" : "#") + settings->value("chan", "#uno").toString();
+    setHost(settings->value("server", "irc.freenode.net").toString());
+    setPort(settings->value("port", 6667).toInt());
+    setSecure(settings->value("ssl", false).toBool());
+    chan = (settings->value("chan", "##newuno").toString().startsWith("#") ? "" : "#") + settings->value("chan", "##newuno").toString();
     setEncoding(settings->value("encoding", "UTF-8").toByteArray());
     setUserName(settings->value("username", "UNO").toString());
     setNickName(settings->value("nickname", "UNO").toString());
     setRealName(settings->value("realname", "UNO").toString());
     setReconnectDelay(5);
+
+    QVariantMap CtcpReplies;
+    CtcpReplies.insert("VERSION", "VERSION UNO [Update "COMMITDATE"]");
+    CtcpReplies.insert("SOURCE", "SOURCE https://github.com/TheShayy/UNO");
+    setCtcpReplies(CtcpReplies);
 
     open();
 
@@ -75,7 +86,8 @@ void UNO::onConnect()
 {
     if (!settings->value("nspassword", QString()).toString().isEmpty())
         sendCommand(IrcCommand::createMessage("NickServ", "IDENTIFY " + settings->value("nspassword").toString()));
-    sendCommand(IrcCommand::createJoin(chan));
+    else
+        sendCommand(IrcCommand::createJoin(chan));
 }
 
 void UNO::onMessage(IrcPrivateMessage *message)
@@ -102,9 +114,9 @@ void UNO::onJoin(IrcJoinMessage *message)
     sendCommand(IrcCommand::createNames(chan));
     sendCommand(IrcCommand::createMessage("NickServ", "STATUS " + message->nick()));
     if (preGame)
-        sendMessage("Envie de jouer au UNO ? Tapez ""\x02""!rejoindre""\x0F"" pour rejoindre la partie en préparation !");
+        sendMessage("Wanna play? Try the ""\x02""!join""\x0F"" command!");
     else if (!inGame)
-        sendMessage("Envie de jouer au UNO ? Tapez ""\x02""!aide""\x0F"" pour afficher la liste des commandes");
+        sendMessage("Wanna play? Try the ""\x02""!help""\x0F"" command!");
     flushMessages();
 }
 
@@ -152,11 +164,11 @@ void UNO::onNick(IrcNickMessage *message)
 
 void UNO::onNotice(IrcNoticeMessage *message)
 {
-    if (message->content().split(" ").size() > 3 && message->nick() == "NickServ" && message->content().startsWith("STATUS") && (message->content().split(" ").at(3) == "Shayy" || message->content().split(" ").at(3) == "TuxAnge" || message->content().split(" ").at(3) == "Feeling"))
-        sendCommand(IrcCommand::createMode(chan, "+o", message->content().split(" ").at(3)));
+    if (message->nick() == "NickServ" && message->content().contains("You are now identified"))
+        sendCommand(IrcCommand::createJoin(chan));
     else if (message->content().startsWith("VERSION"))
     {
-        sendCommand(IrcCommand::createMessage(chan, "\x02" + message->nick() + "\x0F"" utilise:" + message->content().mid(message->content().indexOf(" "))));
+        sendCommand(IrcCommand::createMessage(chan, "\x02" + message->nick() + "\x0F" + " is using:" + message->content().mid(message->content().indexOf(" "))));
         inVersion = false;
     }
     else if (message->nick() == currPing && inPing)
@@ -179,7 +191,7 @@ void UNO::onNotice(IrcNoticeMessage *message)
                 green.append(" ");
             while (red.length() + green.length() < 49)
                 red.append(" ");
-            sendCommand(IrcCommand::createMessage(chan, "\x03""01,03" + green + "\x03""01,04" + red + "\x0F""\x02"" " + users->get(currPing)->getColoredName() + ": " + QString::number(pingTime) + "ms"));
+            sendCommand(IrcCommand::createMessage(chan, "\x03""01,03" + green + "\x03""01,04" + red + "\x0F""\x02"" " + users->get(currPing)->getColoredName() + ": " + QString::number(pingTime) + "ms "));
             currPing = "";
             pingTime = 10000000;
             pingCount = 0;
@@ -204,7 +216,7 @@ void UNO::pingTimeout()
 {
     if (!inPing)
         return;
-    sendCommand(IrcCommand::createMessage(chan, "\x02" + currPing + "\x0F"" a dépassé le délai autorisé"));
+    sendCommand(IrcCommand::createMessage(chan, "\x02" + currPing + "\x0F" + " timed out"));
     inPing = false;
 }
 
@@ -212,7 +224,7 @@ void UNO::versionTimeout(QString nick)
 {
     if (!inVersion)
         return;
-    sendCommand(IrcCommand::createMessage(chan, "\x02" + nick + "\x0F"" a dépassé le délai autorisé"));
+    sendCommand(IrcCommand::createMessage(chan, "\x02" + nick + "\x0F" + " timed out"));
     inVersion = false;
 }
 
@@ -221,7 +233,7 @@ void UNO::preGameTimeout()
     if (!preGame)
         return;
 
-    sendMessage("Délai de préparation de la partie dépassé, la partie est annulée");
+    sendMessage("Timeout reached, the game is canceled");
     flushMessages();
     clear();
 }
@@ -247,23 +259,23 @@ void UNO::remPlayer(QString nick)
 {
     if (players->contains(nick))
     {
-        sendMessage(players->get(nick)->getColoredName() + " a quitté la partie");
+        sendMessage(players->get(nick)->getColoredName() + " left the game");
         players->remove(nick);
         turns.removeOne(nick);
 
         if (players->size() == 1 && inGame)
         {
-            sendMessage(players->get(players->first())->getColoredName() + " a gagné la partie !");
+            sendMessage(players->get(players->first())->getColoredName() + " won the game!");
             clear();
         }
         else if (nick == currPlayer && inGame)
         {
             currPlayer = nextPlayer();
-            sendMessage("C'est donc au tour de " + players->get(currPlayer)->getColoredName());
+            sendMessage(players->get(currPlayer)->getColoredName() + ", it's your turn");
         }
         else if (players->size() == 0 && preGame)
         {
-            sendMessage("Plus aucun joueur, la préparation de la partie est annulée");
+            sendMessage("No player left, the game is canceled");
             clear();
         }
 
@@ -332,15 +344,13 @@ void UNO::command(QString nick, QString cmd, QStringList args)
         #ifndef Q_OS_WIN
         else if (cmd == "update")
         {
-            sendMessage("Mise à jour de " + nickName());
+            sendMessage("Updating " + nickName());
             if (QProcess::startDetached(qApp->applicationDirPath() + "/updateUNO"))
                 qApp->exit();
             else
-                sendMessage("Impossible de lancer le script updateUNO");
+                sendMessage("Unable to start updateUNO");
         }
         #endif
-        else if (cmd == "sendraw")
-            sendRaw(args.join(" "));
         else if (cmd == "kick" && !args.isEmpty())
             remPlayer(args.first());
         else if (cmd == "ban" && !args.isEmpty())
@@ -348,112 +358,136 @@ void UNO::command(QString nick, QString cmd, QStringList args)
             if (users->contains(args.first()))
             {
                 bans->setValue(args.first(), users->get(args.first())->getHostname());
-                sendMessage(users->get(args.first())->getColoredName() + " a été banni");
+                sendMessage(users->get(args.first())->getColoredName() + " is now banned");
             }
             else
-                sendMessage("\x02" + args.first() + "\x0F"" n'a pas été trouvé");
+                sendMessage("\x02" + args.first() + "\x0F"" was not found");
         }
-        else if (cmd == "deban" && !args.isEmpty())
+        else if (cmd == "unban" && !args.isEmpty())
         {
             if (users->contains(args.first()))
             {
                 bans->remove(args.first());
-                sendMessage(users->get(args.first())->getColoredName() + " a été débanni");
+                sendMessage(users->get(args.first())->getColoredName() + " is no longer banned");
             }
             else
-                sendMessage("\x02" + args.first() + "\x0F"" n'a pas été trouvé");
+                sendMessage("\x02" + args.first() + "\x0F"" was not found");
+        }
+        else if (cmd == "al" && accesslist->contains(nick) && !args.isEmpty())
+        {
+            if (args.first() == "add" && args.size() == 2)
+            {
+                if (accesslist->contains(args.at(1)))
+                    sendMessage((users->contains(args.at(1)) ? users->get(args.at(1))->getColoredName() : "\x02" + args.at(1) + "\x0F") + " is already in the access list");
+                else if (users->contains(args.at(1)) && !users->get(args.at(1))->getHostname().isEmpty())
+                {
+                    accesslist->setValue(args.at(1), users->get(args.at(1))->getHostname());
+                    sendMessage(users->get(args.at(1))->getColoredName() + " has been added");
+                }
+                else if (users->contains(args.at(1)))
+                {
+                    sendMessage(users->get(args.at(1))->getColoredName() + " must send a message in the channel before being added");
+                }
+                else
+                    sendMessage("\x02" + args.at(1) + "\x0F"" was not found");
+            }
+            else if (args.first() == "del" && args.size() == 2)
+            {
+                if (accesslist->contains(args.at(1)))
+                {
+                    accesslist->remove(args.at(1));
+                    sendMessage((users->contains(args.at(1)) ? users->get(args.at(1))->getColoredName() : "\x02" + args.at(1) + "\x0F") + " has been removed");
+                }
+                else
+                    sendMessage((users->contains(args.at(1)) ? users->get(args.at(1))->getColoredName() : "\x02" + args.at(1) + "\x0F") + " is not in the access list");
+            }
         }
     }
-    else if (cmd == "op")
-        sendCommand(IrcCommand::createMessage("NickServ", "STATUS " + nick));
 
     if (cmd == "color") {
         if (args.isEmpty())
         {
-            sendMessage("Utilisation : !color numéro");
-            sendMessage("Couleurs disponibles : ""\x03""022  ""\x03""033  ""\x03""044  ""\x03""055  ""\x03""066  ""\x03""077  ""\x03""088  ""\x03""099  ""\x03""1010  ""\x03""1111  ""\x03""1212  ""\x03""1313");
-            sendMessage("Couleur actuelle : " + users->get(nick)->getColoredName());
+            sendMessage("Usage : !color number");
+            sendMessage("Available numbers : ""\x03""022  ""\x03""033  ""\x03""044  ""\x03""055  ""\x03""066  ""\x03""077  ""\x03""088  ""\x03""099  ""\x03""1010  ""\x03""1111  ""\x03""1212  ""\x03""1313");
+            sendMessage("Current color : " + users->get(nick)->getColoredName());
         }
         else if (args.first().toInt() >= 2 && args.first().toInt() <= 13 && args.size() == 1)
         {
             if (players->contains(nick) && (inGame || preGame))
-                sendMessage("Vous ne pouvez pas changer votre couleur en partie ou en préparation, " + players->get(nick)->getColoredName());
+                sendMessage("You can't change your color during a game, " + players->get(nick)->getColoredName());
             else
             {
                 users->get(nick)->setColor(args.first().toShort());
                 colors->setValue(nick, args.first().toShort());
-                sendMessage("Vous avez changé votre couleur, " + users->get(nick)->getColoredName());
+                sendMessage("You changed your color, " + users->get(nick)->getColoredName());
             }
         }
         else if (args.size() == 1)
-            sendMessage(args.first() + " n'est pas une couleur valide");
+            sendMessage(args.first() + " is not a valid color");
         else
-            sendMessage("Utilisation : !color numéro");
+            sendMessage("Usage : !color number");
     }
     else if (cmd == "nocolor") {
         users->get(nick)->setColored(!users->get(nick)->getColored());
         if (users->get(nick)->getColored())
-            sendNotice(nick, "Affichage des couleurs activé");
+            sendNotice(nick, "Color compatibility enabled");
         else
-            sendNotice(nick, "Affichage des couleurs désactivé");
+            sendNotice(nick, "Color compatibility disabled");
     }
     else if (cmd == "scores")
     {
         showScores();
     }
-    else if (cmd == "aide" || cmd == "help")
+    else if (cmd == "help")
     {
         if (args.isEmpty())
         {
-            sendMessage("\x02""Tout le temps :""\x0F"" !version, !regles, !color, !nocolor, !scores");
-            sendMessage("\x02""Avant et pendant la partie :""\x0F"" !liste, !quitter");
-            sendMessage("\x02""Avant la partie :""\x0F"" !uno, !rejoindre, !commencer");
-            sendMessage("\x02""Pendant la partie :""\x0F"" !j, !pioche, !fin, !main, !cartes");
-            sendMessage("\x02""!aide commande""\x0F"" pour avoir des détails sur une commande (exemple: !aide rejoindre)");
+            sendMessage("!version, !rules, !color, !nocolor, !scores, !list, !quit, !uno, !join, !begin, !p, !draw, !end, !hand, !cards");
+            sendMessage("Type ""\x02""!help <command>""\x0F"" to learn more about a command (example: !help join)");
         }
         else if (args.first() == "uno")
-            sendMessage("\x02""Aide :""\x0F"" !uno : commencer la préparation d'une nouvelle partie");
-        else if (args.first() == "j")
+            sendMessage("\x02""Help :""\x0F"" !uno : commencer la préparation d'une nouvelle partie");
+        else if (args.first() == "p")
         {
-            sendMessage("\x02""Aide :""\x0F"" !j");
+            sendMessage("\x02""Help :""\x0F"" !j");
             sendMessage("Utilisation : !j couleur carte");
             sendMessage("Exemple : pour jouer un %c il faut écrire !j v 7", new Card("V", "7"));
         }
-        else if (args.first() == "rejoindre")
-            sendMessage("\x02""Aide :""\x0F"" !rejoindre : rejoindre la partie en préparation");
-        else if (args.first() == "quitter")
-            sendMessage("\x02""Aide :""\x0F"" !quitter : quitter la partie");
-        else if (args.first() == "commencer")
-            sendMessage("\x02""Aide :""\x0F"" !commencer : commencer la partie en préparation");
-        else if (args.first() == "liste" || args.first() == "list")
-            sendMessage("\x02""Aide :""\x0F"" !liste : affiche la liste des joueurs dans la partie");
-        else if (args.first() == "pioche")
-            sendMessage("\x02""Aide :""\x0F"" !pioche : piocher une carte");
-        else if (args.first() == "fin" || args.first() == "f")
-            sendMessage("\x02""Aide :""\x0F"" !fin : passer son tour");
-        else if (args.first() == "main" || args.first() == "m")
-            sendMessage("\x02""Aide :""\x0F"" !main : affiche les cartes dans votre main et la carte visible");
-        else if (args.first() == "cartes")
-            sendMessage("\x02""Aide :""\x0F"" !cartes : affiche le nombre de cartes restantes dans la pioche et dans les mains des joueurs");
-        else if (args.first() == "regles" || args.first() == "rules")
-            sendMessage("\x02""Aide :""\x0F"" !regles : affiche les règles du jeu");
+        else if (args.first() == "join")
+            sendMessage("\x02""Help :""\x0F"" !join : join the current game");
+        else if (args.first() == "quit")
+            sendMessage("\x02""Help :""\x0F"" !quit : leave the game");
+        else if (args.first() == "begin")
+            sendMessage("\x02""Help :""\x0F"" !begin : begin the game");
+        else if (args.first() == "list")
+            sendMessage("\x02""Help :""\x0F"" !list : display players list");
+        else if (args.first() == "draw")
+            sendMessage("\x02""Help :""\x0F"" !draw : draw a card");
+        else if (args.first() == "end")
+            sendMessage("\x02""Help :""\x0F"" !end : skip your turn");
+        else if (args.first() == "hand")
+            sendMessage("\x02""Help :""\x0F"" !hand : display your cards and the last played card");
+        else if (args.first() == "cards")
+            sendMessage("\x02""Help :""\x0F"" !cards : display the remaining cards count and the players cards count");
+        else if (args.first() == "rules")
+            sendMessage("\x02""Help :""\x0F"" !rules : send a link to the rules");
         else if (args.first() == "ping")
-            sendMessage("\x02""Aide :""\x0F"" !ping : affiche la latence entre ""\x02" + nickName() + "\x0F"" et vous");
+            sendMessage("\x02""Help :""\x0F"" !ping : display the latency between ""\x02" + nickName() + "\x0F"" and you");
         else if (args.first() == "version")
-            sendMessage("\x02""Aide :""\x0F"" !version : affiche la version du client de l'utilisateur donné");
+            sendMessage("\x02""Help :""\x0F"" !version : display the client version of the given user");
         else if (args.first() == "slaps")
             command(nickName(), "slaps", QStringList() << nick);
         else if (args.first() == "color")
-            sendMessage("\x02""Aide :""\x0F"" !color : permet de choisir la couleur de son pseudonyme");
+            sendMessage("\x02""Help :""\x0F"" !color : choose your color");
         else if (args.first() == "nocolor")
-            sendMessage("\x02""Aide :""\x0F"" !nocolor : active/désactive l'affichage des couleurs des cartes");
+            sendMessage("\x02""Help :""\x0F"" !nocolor : enable/disable the color compatibilty mode");
         else if (args.first() == "scores")
-            sendMessage("\x02""Aide :""\x0F"" !scores : affiche le classement des joueurs");
+            sendMessage("\x02""Help :""\x0F"" !scores : display scores");
         else
-            sendMessage("Cette commande n'existe pas, " + users->get(nick)->getColoredName());
+            sendMessage("This command does not exist, " + users->get(nick)->getColoredName());
     }
-    else if (cmd == "regles" || cmd == "rules")
-        sendMessage("\x02""Règles :""\x0F"" http://tuxange.org/unorules/");
+    else if (cmd == "rules")
+        sendMessage("\x02""Rules (french) :""\x0F"" http://tuxange.org/unorules/");
     else if (cmd == "version")
     {
         if (args.isEmpty())
@@ -466,7 +500,7 @@ void UNO::command(QString nick, QString cmd, QStringList args)
             inVersion = true;
         }
         else
-            sendCommand(IrcCommand::createMessage(chan, "\x02" + args.first() + "\x0F"" n'a pas été trouvé"));
+            sendCommand(IrcCommand::createMessage(chan, "\x02" + args.first() + "\x0F"" was not found"));
     }
     else if (cmd == "slaps")
     {
@@ -487,25 +521,25 @@ void UNO::command(QString nick, QString cmd, QStringList args)
             QTimer::singleShot(20000, this, SLOT(pingTimeout()));
         }
         else
-            sendCommand(IrcCommand::createMessage(chan, "Un ping est déjà en cours, " + (players->contains(nick) ? players->get(nick)->getColoredName() : "\x02" + nick)));
+            sendCommand(IrcCommand::createMessage(chan, "A ping is already in process, " + (players->contains(nick) ? players->get(nick)->getColoredName() : "\x02" + nick)));
     }
-    else if (cmd == "liste" || cmd == "list")
+    else if (cmd == "list")
     {
         if (inGame || preGame)
-            sendMessage("Dans la partie: " + inGame ? showTurns() : players->list());
+            sendMessage("In the game: " + inGame ? showTurns() : players->list());
         else
-            sendMessage("Il n'y a pas de partie en cours, " + users->get(nick)->getColoredName());
+            sendMessage("There is no game, " + users->get(nick)->getColoredName());
     }
-    else if (cmd == "quitter")
+    else if (cmd == "quit")
     {
         if (players->contains(nick))
             remPlayer(nick);
         else if (!inGame)
-            sendMessage("Il n'y a pas de partie en cours, " + users->get(nick)->getColoredName());
+            sendMessage("There is no game, " + users->get(nick)->getColoredName());
         else
-            sendMessage("Vous n'êtes pas dans cette partie, " + users->get(nick)->getColoredName());
+            sendMessage("You are not in this game, " + users->get(nick)->getColoredName());
     }
-    else if (cmd == "rejoindre")
+    else if (cmd == "join")
     {
         if (preGame)
         {
@@ -514,22 +548,21 @@ void UNO::command(QString nick, QString cmd, QStringList args)
                 Player *p = new Player(nick, this);
                 players->add(p);
                 turns.insert(qrand() % turns.size(), nick);
-                // turns.append(nick);
-                sendMessage(p->getColoredName() + " a rejoint la partie");
-                sendMessage("Il y a " + QString::number(players->size()) + " joueurs dans la partie");
+                sendMessage(p->getColoredName() + " joined this game");
+                sendMessage("There are " + QString::number(players->size()) + " players in game");
             }
             else
-                sendMessage("Vous êtes déjà dans la partie, " + players->get(nick)->getColoredName());
+                sendMessage("You are already in this game, " + players->get(nick)->getColoredName());
         }
         else if (inGame)
-            sendMessage("Impossible de rejoindre une partie en cours de jeu, " + users->get(nick)->getColoredName());
+            sendMessage("You can't join a launched game, " + users->get(nick)->getColoredName());
         else
-            sendMessage("Il n'y a pas de partie en préparation, " + users->get(nick)->getColoredName());
+            sendMessage("There is no game, " + users->get(nick)->getColoredName());
     }
-    else if (cmd == "commencer")
+    else if (cmd == "begin")
     {
         if (!players->contains(nick) && preGame)
-            sendMessage("Vous n'êtes pas dans cette partie, " + users->get(nick)->getColoredName());
+            sendMessage("You are not in this game, " + users->get(nick)->getColoredName());
         else if (players->size() > 1 && preGame)
         {
             pick->randomize();
@@ -537,28 +570,28 @@ void UNO::command(QString nick, QString cmd, QStringList args)
             foreach (Player *w, players->getList())
                 w->getDeck()->init();
             sendMessage(" --- ");
-            sendMessage("Carte visible : %c", lastCard);
+            sendMessage("Last card: %c", lastCard);
             currPlayer = players->rand()->getName();
 
             if (lastCard->getId() == "+2")
             {
-                sendMessage(players->get(currPlayer)->getColoredName() + " pioche 2 cartes");
+                sendMessage(players->get(currPlayer)->getColoredName() + " draws 2 cards");
                 sendNotice(currPlayer, players->get(currPlayer)->getDeck()->randCards(2, users->get(currPlayer)->getColored()));
-                sendMessage(players->get(currPlayer)->getColoredName() + " passe son tour");
+                sendMessage(players->get(currPlayer)->getColoredName() + " skips his turn");
                 currPlayer = nextPlayer();
             }
             else if (lastCard->getId() == "I" && players->size() > 2)
             {
-                sendMessage("Le sens du jeu est ""\x16""inversé");
+                sendMessage("Turns are ""\x16""reversed!");
                 inversed = true;
             }
             else if (lastCard->getId() == "P" || lastCard->getId() == "I")
             {
-                sendMessage(players->get(currPlayer)->getColoredName() + " passe son tour");
+                sendMessage(players->get(currPlayer)->getColoredName() + " skips his turn");
                 currPlayer = nextPlayer();
             }
 
-            sendMessage("C'est au tour de " + players->get(currPlayer)->getColoredName());
+            sendMessage(players->get(currPlayer)->getColoredName() + ", it's your turn");
 
             foreach (Player *w, players->getList())
                 showCards(w->getName());
@@ -567,11 +600,11 @@ void UNO::command(QString nick, QString cmd, QStringList args)
             preGame = false;
         }
         else if (preGame)
-            sendMessage("Il n'y a pas assez de joueurs pour commencer la partie, " + players->get(nick)->getColoredName());
+            sendMessage("There is not enough players to launch the game, " + players->get(nick)->getColoredName());
         else if (inGame)
-            sendMessage("Une partie est déjà en cours, " + users->get(nick)->getColoredName());
+            sendMessage("A game is already launched, " + users->get(nick)->getColoredName());
         else
-            sendMessage("Il n'y a pas de partie en préparation, " + users->get(nick)->getColoredName());
+            sendMessage("There is no game, " + users->get(nick)->getColoredName());
     }
     else if (cmd == "uno")
     {
@@ -581,52 +614,52 @@ void UNO::command(QString nick, QString cmd, QStringList args)
             Player *p = new Player(nick, this);
             players->add(p);
             turns.append(nick);
-            sendMessage(p->getColoredName() + " a créé une nouvelle partie");
-            sendMessage(p->getColoredName() + " a rejoint la partie");
-            sendMessage("Il y a 1 joueur dans la partie");
+            sendMessage(p->getColoredName() + " created a new game");
+            sendMessage(p->getColoredName() + " joined the game");
+            sendMessage("There is 1 player in this game");
             QTimer::singleShot(60*5*1000, this, SLOT(preGameTimeout()));
         }
         else if (inGame)
-            sendMessage("Une partie est déjà en cours, " + users->get(nick)->getColoredName());
+            sendMessage("A game is already launched, " + users->get(nick)->getColoredName());
         else // preGame
-            sendMessage("Une partie est déjà en préparation, " + users->get(nick)->getColoredName());
+            sendMessage("A game is already being created, " + users->get(nick)->getColoredName());
     }
-    else if (cmd == "pioche")
+    else if (cmd == "draw" || cmd == "d")
     {
         if (!inGame)
-            sendMessage("Il n'y a pas de partie en cours, " + users->get(nick)->getColoredName());
+            sendMessage("There is no game, " + users->get(nick)->getColoredName());
         else if (!drawed && currPlayer == nick)
         {
             sendNotice(currPlayer, players->get(currPlayer)->getDeck()->randCards(1));
-            sendMessage("Carte visible : %c", lastCard);
+            sendMessage("Last card: %c", lastCard);
             drawed = true;
         }
         else if (currPlayer == nick)
-            sendMessage("Vous avez déjà pioché, " + players->get(nick)->getColoredName());
+            sendMessage("You already drew, " + players->get(nick)->getColoredName());
         else
-            sendMessage("C'est au tour de " + players->get(currPlayer)->getColoredName());
+            sendMessage(players->get(currPlayer)->getColoredName() + ", it's your turn");
     }
-    else if (cmd == "fin" || cmd == "f")
+    else if (cmd == "end" || cmd == "e")
     {
         if (!inGame)
-            sendMessage("Il n'y a pas de partie en cours, " + users->get(nick)->getColoredName());
+            sendMessage("There is no game, " + users->get(nick)->getColoredName());
         else if (drawed && currPlayer == nick)
             end = true;
         else if (currPlayer == nick)
-            sendMessage("Vous n'avez pas pioché, " + players->get(currPlayer)->getColoredName());
+            sendMessage("You did not draw, " + players->get(currPlayer)->getColoredName());
         else
-            sendMessage("C'est au tour de " + players->get(currPlayer)->getColoredName());
+            sendMessage(players->get(currPlayer)->getColoredName() + ", it's your turn");
     }
-    else if (cmd == "main")
+    else if (cmd == "hand")
     {
         if (!inGame)
-            sendMessage("Il n'y a pas de partie en cours, " + users->get(nick)->getColoredName());
+            sendMessage("There is no game, " + users->get(nick)->getColoredName());
         else if (!isOp(nick) && !args.isEmpty())
-            sendMessage("Vous n'avez pas le droit de voir les cartes des autres joueurs, " + users->get(nick)->getColoredName());
+            sendMessage("You can't see the other players' cards, " + users->get(nick)->getColoredName());
         else if (args.isEmpty())
         {
-            sendMessage("Carte visible : %c", lastCard);
-            sendMessage("C'est au tour de " + players->get(currPlayer)->getColoredName());
+            sendMessage("Last card: %c", lastCard);
+            sendMessage(players->get(currPlayer)->getColoredName() + ", it's your turn");
             if (players->contains(nick)) showCards(nick);
         }
         else if (isOp(nick))
@@ -634,36 +667,36 @@ void UNO::command(QString nick, QString cmd, QStringList args)
             if (players->contains(args.at(0)))
                 showCards(args.at(0), nick);
             else
-                sendMessage("Impossible de trouver ""\x02" + args.at(0) + ", " + users->get(nick)->getColoredName());
+                sendMessage("\x02" + args.at(0) + "\x0F"" was not found, " + users->get(nick)->getColoredName());
             flushMessages();
         }
     }
-    else if (cmd == "cartes")
+    else if (cmd == "cards")
     {
         if (!inGame)
-            sendMessage("Il n'y a pas de partie en cours, " + users->get(nick)->getColoredName());
+            sendMessage("There is no game, " + users->get(nick)->getColoredName());
         else
         {
-            sendMessage("Il reste " + QString::number(pick->size()) + " cartes à piocher");
+            sendMessage(QString::number(pick->size()) + " cards remaining");
             foreach (Player *w, players->getList())
-                sendMessage(w->getColoredName() + " a " + QString::number(w->getDeck()->size()) + " cartes");
+                sendMessage(w->getColoredName() + " has " + QString::number(w->getDeck()->size()) + " cards");
         }
     }
-    else if (cmd == "j")
+    else if (cmd == "p")
     {
         Player *curr = players->get(currPlayer);
         if (!inGame)
-            sendMessage("Il n'y a pas de partie en cours, " + users->get(nick)->getColoredName());
+            sendMessage("There is no game, " + users->get(nick)->getColoredName());
         else if (currPlayer != nick)
-            sendMessage("C'est au tour de " + curr->getColoredName());
+            sendMessage(curr->getColoredName() + ", it's your turn");
         else if (args.size() < 2)
-            sendMessage("\"!aide j\" pour savoir utiliser !j");
+            sendMessage("\x02""!help""\x0F"" p to learn how to use it");
         else if (curr->getDeck()->contains(new Card(args.at(0), args.at(1))) || curr->getDeck()->contains(new Card("N", args.at(1))))
         {
             QString color = QString(args.at(0)).toUpper(), id = QString(args.at(1)).toUpper();
             if (lastCard->getColor() == color || lastCard->getId() == id || lastCard->getColor() == "N" || id == "J" || id == "+4")
             {
-                if (color == "R" || color == "V" || color == "B" || color == "J")
+                if (color == "R" || color == "G" || color == "B" || color == "Y")
                 {
                     if (id == "J")
                     {
@@ -676,7 +709,7 @@ void UNO::command(QString nick, QString cmd, QStringList args)
                         lastCard = new Card(color, id);
                         curr->getDeck()->remCard("N", id);
                         Player *next = players->get(nextPlayer());
-                        sendMessage(next->getColoredName() + " pioche 4 cartes");
+                        sendMessage(next->getColoredName() + " draws 4 cards");
                         sendNotice(next->getName(), next->getDeck()->randCards(4, users->get(next->getName())->getColored()));
                         next->cantPlay();
                         end = true;
@@ -684,7 +717,7 @@ void UNO::command(QString nick, QString cmd, QStringList args)
                     else if (id == "+2")
                     {
                         Player *next = players->get(nextPlayer());
-                        sendMessage(next->getColoredName() + " pioche 2 cartes");
+                        sendMessage(next->getColoredName() + " draws 2 cards");
                         sendNotice(next->getName(), next->getDeck()->randCards(2, users->get(next->getName())->getColored()));
                         next->cantPlay();
                         lastCard = new Card(color, id);
@@ -697,7 +730,7 @@ void UNO::command(QString nick, QString cmd, QStringList args)
                             players->get(nextPlayer())->cantPlay();
                         else
                         {
-                            sendMessage("Le sens de jeu est ""\x16""inversé");
+                            sendMessage("Turns are ""\x16""reversed!");
                             inversed = !inversed;
                         }
                         lastCard = new Card(color, id);
@@ -719,27 +752,27 @@ void UNO::command(QString nick, QString cmd, QStringList args)
                     }
                 }
                 else
-                    sendMessage("Cette couleur n'existe pas, " + curr->getColoredName());
+                    sendMessage("This color does not exist, " + curr->getColoredName());
             }
             else
-                sendMessage("Vous ne pouvez pas jouer cette carte, " + curr->getColoredName());
+                sendMessage("You can't play this card', " + curr->getColoredName());
         }
         else
         {
             bool ok;
             QString color = QString(args.at(0)).toUpper(), id = QString(args.at(1)).toUpper();
-            if (((id == "+2" || id == "I" || id == "P" || (id.toInt(&ok, 10) < 10 && ok)) || (id == "+4" || id == "J")) && (color == "R" || color == "V" || color == "B" || color == "J"))
-                sendMessage("Vous n'avez pas cette carte, " + curr->getColoredName());
+            if (((id == "+2" || id == "I" || id == "P" || (id.toInt(&ok, 10) < 10 && ok)) || (id == "+4" || id == "J")) && (color == "R" || color == "G" || color == "B" || color == "Y"))
+                sendMessage("You don't have this card, " + curr->getColoredName());
             else
-                sendMessage("Cette carte n'existe pas, " + curr->getColoredName());
+                sendMessage("This card does not exist, " + curr->getColoredName());
         }
     }
 
     if (end && players->get(currPlayer)->getDeck()->size() == 1)
-        sendMessage(players->get(currPlayer)->getColoredName() + " ""\x16""est en ""\x03""01,15[""\x02""\x03""04,15UNO""\x0F""\x03""01,15]""\x02""\x03""00,14""\x16"" !");
+        sendMessage(players->get(currPlayer)->getColoredName() + " ""\x16""is ""\x03""01,15[""\x02""\x03""04,15UNO""\x0F""\x03""01,15]""\x02""\x03""00,14""\x16"" !");
     else if (end && players->get(currPlayer)->getDeck()->size() == 0)
     {
-        sendMessage(players->get(currPlayer)->getColoredName() + " a gagné la partie !");
+        sendMessage(players->get(currPlayer)->getColoredName() + " won the game !");
 
         scores->setValue(currPlayer, scores->value(currPlayer, 0).toInt() + 1);
         int points = scores->value("Points/" + currPlayer, 0).toInt(), origpoints = points;
@@ -760,10 +793,10 @@ void UNO::command(QString nick, QString cmd, QStringList args)
         }
 
         scores->setValue("Points/" + currPlayer, points);
-        sendMessage(players->get(currPlayer)->getColoredName() + " a gagné " + QString::number(points - origpoints) + " points !");
+        sendMessage(players->get(currPlayer)->getColoredName() + " earned " + QString::number(points - origpoints) + " points !");
 
         sendMessage(" --- ");
-        showScores();
+        sendMessage("Type ""\x02""!scores""\x0F"" to show the scores");
         flushMessages();
         clear();
         return;
@@ -775,18 +808,18 @@ void UNO::command(QString nick, QString cmd, QStringList args)
         drawed = false;
         if (!players->get(currPlayer)->canPlay())
         {
-            sendMessage(players->get(currPlayer)->getColoredName() + " passe son tour");
+            sendMessage(players->get(currPlayer)->getColoredName() + " skips his turn");
             sendMessage(" --- ");
-            sendMessage("Carte visible : %c", lastCard);
+            sendMessage("Last Card: %c", lastCard);
             currPlayer = nextPlayer();
-            sendMessage("C'est au tour de " + players->get(currPlayer)->getColoredName());
+            sendMessage(players->get(currPlayer)->getColoredName() + ", it's your turn");
             showCards();
         }
         else
         {
             sendMessage(" --- ");
-            sendMessage("Carte visible : %c", lastCard);
-            sendMessage("C'est au tour de " + players->get(currPlayer)->getColoredName());
+            sendMessage("Last card: %c", lastCard);
+            sendMessage(players->get(currPlayer)->getColoredName() + ", it's your turn");
             showCards();
         }
     }
@@ -807,11 +840,11 @@ void UNO::showScores()
 {
     if (scores->allKeys().isEmpty())
     {
-        sendMessage("Aucune partie n'a été jouée, le classement commencera à la fin de la première partie");
+        sendMessage("Scores are still empty");
         return;
     }
 
-    sendMessage("Classement :");
+    sendMessage("Scores:");
     QStringList people = scores->allKeys();
 
     foreach (QString w, people)
@@ -835,7 +868,7 @@ void UNO::showScores()
                 ratio = currratio;
             }
         }
-        sendMessage((i == 9 ? "" : " ") + QString::number(i + 1) + ". " + (users->contains(curr) ? users->get(curr)->getColoredName().insert(7, "\u200B") : "\x02" + curr + "\x0F") + " : " + QString::number((int)ratio) + " (" + scores->value("Points/" + curr).toString() + " points sur " + scores->value(curr).toString() + " victoire" + (scores->value(curr).toInt() > 1 ? "s" : "") + " pour " + scores->value("Total/" + curr).toString() + " partie" + (scores->value("Total/" + curr).toInt() > 1 ? "s" : "") + " jouée" + (scores->value("Total/" + curr).toInt() > 1 ? "s" : "") + ")");
+        sendMessage((i == 9 ? "" : " ") + QString::number(i + 1) + ". " + (users->contains(curr) ? users->get(curr)->getColoredName().insert(7, "\u200B") : "\x02" + curr + "\x0F") + " : " + QString::number((int)ratio) + " (" + scores->value("Points/" + curr).toString() + " points for " + scores->value(curr).toString() + " win" + (scores->value(curr).toInt() > 1 ? "s" : "") + " on " + scores->value("Total/" + curr).toString() + " game" + (scores->value("Total/" + curr).toInt() > 1 ? "s" : "") + " played)");
         people.removeOne(curr);
 
         if (people.isEmpty())
@@ -847,7 +880,15 @@ void UNO::showScores()
 
 bool UNO::isOp(QString user)
 {
-    return network()->prefixToMode(users->get(user)->getMode()) == "o" || network()->prefixToMode(users->get(user)->getMode()) == "q" ? true : false;
+    if (accesslist->contains(user))
+    {
+        if (getUsers()->get(user)->getHostname() == accesslist->value(user))
+            return true;
+        else
+            return false;
+    }
+    else
+        return network()->prefixToMode(users->get(user)->getMode()) == "o" || network()->prefixToMode(users->get(user)->getMode()) == "q" ? true : false;
 }
 
 bool UNO::startsWithMode(QString nick)

@@ -36,6 +36,7 @@ HEADERS += \
     players.h \
     player.h \
     user.h \
-    users.h
+    users.h \
+    commit_date.h
 
 include($$_PRO_FILE_PWD_/../libcommuni/src/core/core.pri)

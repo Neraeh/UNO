@@ -24,9 +24,9 @@ QString Card::toString(bool colored) const
             card += ",04";
         else if (color == "B")
             card += ",11";
-        else if (color == "J")
+        else if (color == "Y")
             card += ",08";
-        else if (color == "V")
+        else if (color == "G")
             card += ",03";
         else
             card += ",00""\x03""00,01";

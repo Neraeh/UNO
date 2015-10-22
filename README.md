@@ -1,16 +1,16 @@
 UNO IRC bot
 ======
-**UNO** est un bot IRC écrit avec le framework Qt.
+**UNO** is written with the Qt Framework.
 
-## Utilisation
-Qt en version 5.0 minimum est indispensable pour la compilation et l'utilisation
+## Usage
+Qt5 is required to build it
 # Linux
 ```
 $ git clone https://github.com/TheShayy/UNO.git && cd UNO
 $ ./configure
 $ make
 ```
-A la fin de la compilation un exécutable nommé UNO sera dans le dossier UNO/src
+Once built, UNO will be available inside the src directory
 
 # Windows
 ```
@@ -18,14 +18,11 @@ A la fin de la compilation un exécutable nommé UNO sera dans le dossier UNO/sr
 > call configure.bat
 > mingw32-make
 ```
-A la fin de la compilation un exécutable nommé UNO.exe sera dans le dossier UNO/src/release
+Once built, UNO.exe will be available inside the src\release directory
 
-### Librairies externes
+### External library
 - libcommuni (https://github.com/communi/libcommuni)
 
-## Version 
-* Version 0.9
-
 ## Contact
-* IRC: irc.t411.io #dev
+* IRC: irc.freenode.net ##3xrien
 * Mail: shayy.public [at] tuxange.org

@@ -66,7 +66,7 @@ private:
     Users *users;
     bool inGame, preGame, drawed, inversed, inPing, inVersion;
     unsigned int pingTimeBegin, pingTime, pingCount;
-    QSettings *settings, *slaps, *colors, *scores, *bans;
+    QSettings *settings, *slaps, *colors, *scores, *bans, *accesslist;
 };
 
 #endif // UNO_H
