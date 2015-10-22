@@ -1,0 +1,6 @@
+#!/bin/bash
+
+until sh -c "nohup ./UNO >/dev/null 2>&1 &"; do
+        echo "UNO closed with code $?. Respawning..." >&2
+        sleep 1
+done

@@ -1,0 +1,26 @@
+#!/bin/bash
+
+echo -- Downloading git repository...
+if [ ! -d "git" ]; then
+        mkdir git
+fi
+cd git
+if [ -d "UNO" ]; then
+        rm -rf ./UNO
+fi
+git clone https://github.com/TheShayy/UNO.git
+echo -- Launching configure script...
+cd UNO
+./configure
+echo -- Launching make...
+cd src
+make -j`nproc`
+echo -- Killing UNO...
+killall .startUNO
+killall UNO
+echo -- Replacing with the new one...
+cp -f ./UNO ../../../
+echo -- Launching UNO...
+cd ../../..
+./startUNO
+echo -- Done !

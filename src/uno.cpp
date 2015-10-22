@@ -655,7 +655,7 @@ void UNO::command(QString nick, QString cmd, QStringList args)
         if (!inGame)
             sendMessage("There is no game, " + users->get(nick)->getColoredName());
         else if (!isOp(nick) && !args.isEmpty())
-            sendMessage("You can't see the other players' cards, " + users->get(nick)->getColoredName());
+            sendMessage("You can't see the other players cards, " + users->get(nick)->getColoredName());
         else if (args.isEmpty())
         {
             sendMessage("Last card: %c", lastCard);
@@ -755,7 +755,7 @@ void UNO::command(QString nick, QString cmd, QStringList args)
                     sendMessage("This color does not exist, " + curr->getColoredName());
             }
             else
-                sendMessage("You can't play this card', " + curr->getColoredName());
+                sendMessage("You can't play this card, " + curr->getColoredName());
         }
         else
         {
