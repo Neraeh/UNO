@@ -450,7 +450,7 @@ void UNO::command(QString nick, QString cmd, QStringList args)
         else if (args.first() == "p")
         {
             sendMessage("\x02""Help :""\x0F"" !j");
-            sendMessage("Usage : !j color card");
+            sendMessage("Usage : !p color card");
             sendMessage("Example : to play a %c you should type !p g 7", new Card("G", "7"));
         }
         else if (args.first() == "join")
