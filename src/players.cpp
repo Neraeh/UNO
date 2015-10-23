@@ -5,21 +5,6 @@ Players::Players()
     inversed = false;
 }
 
-void Players::add(Player* _player)
-{
-    players.append(_player);
-}
-
-void Players::remove(QString _name)
-{
-    players.removeAt(indexOf(_name));
-}
-
-void Players::remove(Player *_player)
-{
-    players.removeOne(_player);
-}
-
 bool Players::contains(QString _name) const
 {
     foreach (Player* w, players)
@@ -48,12 +33,7 @@ QString Players::toString() const
 
 QString Players::first() const
 {
-    return players.at(0)->getName();
-}
-
-Player* Players::rand() const
-{
-    return players.at(qrand() % players.size());
+    return players.first()->getName();
 }
 
 Player* Players::get(QString _name) const
@@ -72,28 +52,8 @@ int Players::indexOf(QString _name) const
     return -1;
 }
 
-int Players::size() const
-{
-    return players.size();
-}
-
-bool Players::isEmpty() const
-{
-    return players.size() - 1 == 0 ? true : false;
-}
-
-bool Players::isInversed() const
-{
-    return inversed;
-}
-
 void Players::clear()
 {
     players.clear();
     inversed = false;
-}
-
-QList<Player*> Players::getList() const
-{
-    return players;
 }

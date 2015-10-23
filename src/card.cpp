@@ -5,16 +5,6 @@ Card::Card(QString _color, QString _id)
     color = _color.toUpper(), id = _id.toUpper();
 }
 
-QString Card::getColor() const
-{
-    return color;
-}
-
-QString Card::getId() const
-{
-    return id;
-}
-
 QString Card::toString(bool colored) const
 {
     if (colored)

@@ -7,22 +7,57 @@ class Player;
 class Players
 {
 public:
-    explicit Players();
-    void add(Player* _player);
-    void remove(QString _name);
-    void remove(Player* _player);
+    Players();
+
+    inline void add(Player* _player)
+    {
+        players.append(_player);
+    }
+
+    inline void remove(QString _name)
+    {
+        players.removeAt(indexOf(_name));
+    }
+
+    inline void remove(Player *_player)
+    {
+        players.removeOne(_player);
+    }
+
     bool contains(QString _name) const;
     QString list() const;
     QString toString() const;
     QString first() const;
-    Player *rand() const;
+
+    inline Player* rand() const
+    {
+        return players.at(qrand() % players.size());
+    }
+
     Player* get(QString _name) const;
     int indexOf(QString _name) const;
-    int size() const;
-    bool isEmpty() const;
-    bool isInversed() const;
+
+    inline int size() const
+    {
+        return players.size();
+    }
+
+    inline bool isEmpty() const
+    {
+        return players.size() - 1 == 0 ? true : false;
+    }
+
+    inline bool isInversed() const
+    {
+        return inversed;
+    }
+
     void clear();
-    QList<Player*> getList() const;
+
+    inline QList<Player*> getList() const
+    {
+        return players;
+    }
 
 private:
     QList<Player*> players;

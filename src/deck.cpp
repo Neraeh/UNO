@@ -35,11 +35,6 @@ void Deck::remCard(QString _color, QString _id)
     }
 }
 
-QList<Card*> Deck::getList() const
-{
-    return cards;
-}
-
 bool Deck::contains(Card* _card) const
 {
     foreach (Card* w, cards)
@@ -62,16 +57,6 @@ bool Deck::containsId(QString _id) const
         if (w->getId() == _id.toUpper())
             return true;
     return false;
-}
-
-int Deck::size() const
-{
-    return cards.size();
-}
-
-bool Deck::isEmpty() const
-{
-    return cards.isEmpty();
 }
 
 QString Deck::toString(bool colored) const

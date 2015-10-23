@@ -6,11 +6,19 @@
 class Card
 {
 public:
-    explicit Card(QString _color, QString _id);
-    QString getColor() const;
-    QString getId() const;
+    Card(QString _color, QString _id);
+
+    inline QString getColor() const
+    {
+        return color;
+    }
+
+    inline QString getId() const
+    {
+        return id;
+    }
+
     QString toString(bool colored = true) const;
-    inline bool operator==(const Card& other) const;
 
 private:
     QString color, id;

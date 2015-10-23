@@ -8,16 +8,29 @@ class UNO;
 class Deck
 {
 public:
-    explicit Deck(UNO *_parent);
+    Deck(UNO *_parent);
     void init();
     QString randCards(int _count, bool colored = true);
     void remCard(QString _color, QString _id);
-    QList<Card*> getList() const;
+
+    inline QList<Card*> getList() const
+    {
+        return cards;
+    }
+
+    inline int size() const
+    {
+        return cards.size();
+    }
+
+    inline bool isEmpty() const
+    {
+        return cards.isEmpty();
+    }
+
     bool contains(Card *_card) const;
     bool containsColor(QString _color) const;
     bool containsId(QString _id) const;
-    int size() const;
-    bool isEmpty() const;
     QString toString(bool colored = true) const;
 
 private:

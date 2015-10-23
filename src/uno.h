@@ -19,11 +19,22 @@ class UNO : public IrcConnection
 {
     Q_OBJECT
 public:
-    explicit UNO(QCoreApplication *_parent = 0);
+    UNO(QCoreApplication *_parent = 0);
     ~UNO();
-    Cards* getCards() const;
-    Users* getUsers() const;
-    Players* getPlayers() const;
+    inline Cards* getCards() const
+    {
+        return pick;
+    }
+
+    inline Users* getUsers() const
+    {
+        return users;
+    }
+
+    inline Players* getPlayers() const
+    {
+        return players;
+    }
 
 public slots:
     void onConnect();

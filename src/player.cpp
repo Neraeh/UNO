@@ -13,35 +13,10 @@ Player::Player(QString _name, UNO *_parent)
     play = true;
 }
 
-Deck* Player::getDeck() const
-{
-    return deck;
-}
-
-QString Player::getName() const
-{
-    return name;
-}
-
-QString Player::getColoredName() const
-{
-    return color + name + "\x03""00,14";
-}
-
-QString Player::getColor() const
-{
-    return color;
-}
-
 bool Player::canPlay()
 {
     if (play)
         return true;
     play = true;
     return false;
-}
-
-void Player::cantPlay()
-{
-    play = false;
 }

@@ -114,26 +114,6 @@ Cards::Cards(UNO *_parent)
     cards.append(new Card("N", "J"));
 }
 
-Card* Cards::get(int i) const
-{
-    return cards.at(i);
-}
-
-int Cards::size() const
-{
-    return cards.size();
-}
-
-Card* Cards::first() const
-{
-    return cards.first();
-}
-
-Card* Cards::last() const
-{
-    return cards.last();
-}
-
 void Cards::randomize()
 {
     QList<Card*> temp;
@@ -168,9 +148,4 @@ Card* Cards::pick(Card *_card)
     }
 
     return ret;
-}
-
-bool Cards::isEmpty() const
-{
-    return cards.isEmpty();
 }

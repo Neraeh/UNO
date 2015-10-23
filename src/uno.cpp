@@ -42,7 +42,7 @@ UNO::UNO(QCoreApplication *_parent) : IrcConnection(_parent)
     setReconnectDelay(5);
 
     QVariantMap CtcpReplies;
-    CtcpReplies.insert("VERSION", "UNO [Update "COMMITDATE"]");
+    CtcpReplies.insert("VERSION", "\x03""01,15[""\x02""\x03""04,15UNO""\x0F""\x03""01,15]""\x02""\x03""00,14""\x16"" [Update "COMMITDATE"]");
     CtcpReplies.insert("SOURCE", "https://github.com/TheShayy/UNO");
     setCtcpReplies(CtcpReplies);
 
@@ -257,30 +257,30 @@ QString UNO::nextPlayer() const
 
 void UNO::remPlayer(QString nick)
 {
-    if (players->contains(nick))
+    if (!players->contains(nick))
+        return;
+
+    sendMessage(players->get(nick)->getColoredName() + " left the game");
+    players->remove(nick);
+    turns.removeOne(nick);
+
+    if (players->size() == 1 && inGame)
     {
-        sendMessage(players->get(nick)->getColoredName() + " left the game");
-        players->remove(nick);
-        turns.removeOne(nick);
-
-        if (players->size() == 1 && inGame)
-        {
-            sendMessage(players->get(players->first())->getColoredName() + " won the game!");
-            clear();
-        }
-        else if (nick == currPlayer && inGame)
-        {
-            currPlayer = nextPlayer();
-            sendMessage(players->get(currPlayer)->getColoredName() + ", it's your turn");
-        }
-        else if (players->size() == 0 && preGame)
-        {
-            sendMessage("No player left, the game is canceled");
-            clear();
-        }
-
-        flushMessages();
+        sendMessage(players->get(players->first())->getColoredName() + " won the game!");
+        clear();
     }
+    else if (nick == currPlayer && inGame)
+    {
+        currPlayer = nextPlayer();
+        sendMessage(players->get(currPlayer)->getColoredName() + ", it's your turn");
+    }
+    else if (players->size() == 0 && preGame)
+    {
+        sendMessage("No player left, the game is canceled");
+        clear();
+    }
+
+    flushMessages();
 }
 
 void UNO::clear()
@@ -893,23 +893,8 @@ bool UNO::isOp(QString user)
 
 bool UNO::startsWithMode(QString nick)
 {
-    QString w = nick.at(0);
+    QChar w = nick.at(0);
     if (w == network()->modeToPrefix("q") || w == network()->modeToPrefix("a") || w == network()->modeToPrefix("o") || w == network()->modeToPrefix("h") || w == network()->modeToPrefix("v"))
         return true;
     return false;
-}
-
-Cards* UNO::getCards() const
-{
-    return pick;
-}
-
-Users* UNO::getUsers() const
-{
-    return users;
-}
-
-Players* UNO::getPlayers() const
-{
-    return players;
 }

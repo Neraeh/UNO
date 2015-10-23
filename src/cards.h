@@ -8,14 +8,35 @@ class Card;
 class Cards
 {
 public:
-    explicit Cards(UNO *_parent);
-    Card* get(int i) const;
-    int size() const;
-    Card* first() const;
-    Card* last() const;
+    Cards(UNO *_parent);
+
+    inline Card* get(int i) const
+    {
+        return cards.at(i);
+    }
+
+    inline int size() const
+    {
+        return cards.size();
+    }
+
+    inline Card* first() const
+    {
+        return cards.first();
+    }
+
+    inline Card* last() const
+    {
+        return cards.last();
+    }
+
     void randomize();
     Card *pick(Card* _card = 0);
-    bool isEmpty() const;
+
+    inline bool isEmpty() const
+    {
+        return cards.isEmpty();
+    }
 
 private:
     UNO *parent;
