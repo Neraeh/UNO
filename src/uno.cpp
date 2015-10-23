@@ -449,11 +449,7 @@ void UNO::command(QString nick, QString cmd, QStringList args)
             sendMessage("\x02""Help :""\x0F"" !uno : commencer la préparation d'une nouvelle partie");
         else if (args.first() == "p")
         {
-<<<<<<< HEAD
             sendMessage("\x02""Help :""\x0F"" !p");
-=======
-            sendMessage("\x02""Help :""\x0F"" !j");
->>>>>>> 056e737b5bc5429b1652ee38d2efeb8e9e7aed20
             sendMessage("Usage : !p color card");
             sendMessage("Example : to play a %c you should type !p g 7", new Card("G", "7"));
         }
