@@ -21,6 +21,7 @@ class UNO : public IrcConnection
 public:
     UNO(QCoreApplication *_parent = 0);
     ~UNO();
+
     inline Cards* getCards() const
     {
         return pick;

@@ -450,8 +450,8 @@ void UNO::command(QString nick, QString cmd, QStringList args)
         else if (args.first() == "p")
         {
             sendMessage("\x02""Help :""\x0F"" !j");
-            sendMessage("Utilisation : !j couleur carte");
-            sendMessage("Exemple : pour jouer un %c il faut écrire !j v 7", new Card("V", "7"));
+            sendMessage("Usage : !j color card");
+            sendMessage("Example : to play a %c you should type !p g 7", new Card("G", "7"));
         }
         else if (args.first() == "join")
             sendMessage("\x02""Help :""\x0F"" !join : join the current game");
@@ -724,7 +724,7 @@ void UNO::command(QString nick, QString cmd, QStringList args)
                         curr->getDeck()->remCard(color, id);
                         end = true;
                     }
-                    else if (id == "I")
+                    else if (id == "R")
                     {
                         if (players->size() == 2)
                             players->get(nextPlayer())->cantPlay();
@@ -737,7 +737,7 @@ void UNO::command(QString nick, QString cmd, QStringList args)
                         curr->getDeck()->remCard(color, id);
                         end = true;
                     }
-                    else if (id == "P")
+                    else if (id == "S")
                     {
                         players->get(nextPlayer())->cantPlay();
                         lastCard = new Card(color, id);
@@ -761,7 +761,7 @@ void UNO::command(QString nick, QString cmd, QStringList args)
         {
             bool ok;
             QString color = QString(args.at(0)).toUpper(), id = QString(args.at(1)).toUpper();
-            if (((id == "+2" || id == "I" || id == "P" || (id.toInt(&ok, 10) < 10 && ok)) || (id == "+4" || id == "J")) && (color == "R" || color == "G" || color == "B" || color == "Y"))
+            if (((id == "+2" || id == "R" || id == "S" || (id.toInt(&ok, 10) < 10 && ok)) || (id == "+4" || id == "J")) && (color == "R" || color == "G" || color == "B" || color == "Y"))
                 sendMessage("You don't have this card, " + curr->getColoredName());
             else
                 sendMessage("This card does not exist, " + curr->getColoredName());
@@ -785,7 +785,7 @@ void UNO::command(QString nick, QString cmd, QStringList args)
                 {
                     if (c->getId() == "+4" || c->getId() == "J")
                         points += 50;
-                    else if (c->getId() == "I" || c->getId() == "P" || c->getId() == "+2")
+                    else if (c->getId() == "R" || c->getId() == "S" || c->getId() == "+2")
                         points += 20;
                     else
                         points += c->getId().toInt();
