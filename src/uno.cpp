@@ -760,11 +760,13 @@ void UNO::command(QString nick, QString cmd, QStringList args)
         else
         {
             bool ok;
-            QString color = QString(args.at(0)).toUpper(), id = QString(args.at(1)).toUpper();
-            if (((id == "+2" || id == "R" || id == "S" || (id.toInt(&ok, 10) < 10 && ok)) || (id == "+4" || id == "J")) && (color == "R" || color == "G" || color == "B" || color == "Y"))
-                sendMessage("You don't have this card, " + curr->getColoredName());
-            else
+            QString color = QString(args.first()).toUpper(), id = QString(args.at(1)).toUpper();
+            if (color != "R" && color != "G" && color != "B" && color != "Y")
+                sendMessage("This color does not exist, " + curr->getColoredName());
+            else if (id != "+4" && id != "+2" && id != "J" && id != "R" && id != "S" && !(id.toInt(&ok, 10) < 10 && ok && !id.contains("+")))
                 sendMessage("This card does not exist, " + curr->getColoredName());
+            else
+                sendMessage("You don't have this card, " + curr->getColoredName());
         }
     }
 
