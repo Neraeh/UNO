@@ -112,6 +112,7 @@ void UNO::onMessage(IrcPrivateMessage *message)
 void UNO::onJoin(IrcJoinMessage *message)
 {
     sendCommand(IrcCommand::createNames(chan));
+    users->get(message->nick())->setHostname(message->host());
     sendCommand(IrcCommand::createMessage("NickServ", "STATUS " + message->nick()));
     if (preGame)
         sendMessage("Wanna play? Try the ""\x02""!join""\x0F"" command!");
@@ -379,14 +380,10 @@ void UNO::command(QString nick, QString cmd, QStringList args)
             {
                 if (accesslist->contains(args.at(1)))
                     sendMessage((users->contains(args.at(1)) ? users->get(args.at(1))->getColoredName() : "\x02" + args.at(1) + "\x0F") + " is already in the access list");
-                else if (users->contains(args.at(1)) && !users->get(args.at(1))->getHostname().isEmpty())
+                else if (users->contains(args.at(1)))
                 {
                     accesslist->setValue(args.at(1), users->get(args.at(1))->getHostname());
                     sendMessage(users->get(args.at(1))->getColoredName() + " has been added");
-                }
-                else if (users->contains(args.at(1)))
-                {
-                    sendMessage(users->get(args.at(1))->getColoredName() + " must send a message in the channel before being added");
                 }
                 else
                     sendMessage("\x02" + args.at(1) + "\x0F"" was not found");
