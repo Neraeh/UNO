@@ -24,5 +24,5 @@ Once built, UNO.exe will be available inside the src\release directory
 - libcommuni (https://github.com/communi/libcommuni)
 
 ## Contact
-* IRC: irc.freenode.net ##3xrien
+* IRC: irc.freenode.net #unobot
 * Mail: shayy.public [at] tuxange.org
