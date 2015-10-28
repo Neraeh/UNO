@@ -6,7 +6,7 @@ UNO::UNO(QCoreApplication *_parent) : IrcConnection(_parent)
     qsrand(QTime::currentTime().msec());
 
     pick = new Cards(this);
-    players = new Players;
+    players = new Players(this);
     users = new Users;
     lastCard = new Card("", "");
     inGame = false, preGame = false, drawed = false, inversed = false, inPing = false, inVersion = false;
@@ -347,7 +347,10 @@ void UNO::command(QString nick, QString cmd, QStringList args)
         {
             sendMessage("Updating " + nickName());
             if (QProcess::startDetached(qApp->applicationDirPath() + "/updateUNO"))
+            {
+                quit("Updating...");
                 qApp->exit();
+            }
             else
                 sendMessage("Unable to start updateUNO");
         }

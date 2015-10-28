@@ -1,8 +1,8 @@
 #include "players.h"
 
-Players::Players()
+Players::Players(UNO* _parent)
 {
-    inversed = false;
+    parent = _parent, inversed = false;
 }
 
 bool Players::contains(QString _name) const
@@ -41,7 +41,7 @@ Player* Players::get(QString _name) const
     foreach (Player* w, players)
         if (w->getName() == _name)
             return w;
-    return NULL;
+    return new Player(_name, parent);
 }
 
 int Players::indexOf(QString _name) const

@@ -12,6 +12,8 @@
 #include "cards.h"
 #include "players.h"
 #include "users.h"
+#include "card.h"
+#include "player.h"
 
 class Players;
 class Cards;

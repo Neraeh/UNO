@@ -27,7 +27,7 @@ User* Users::get(QString _nick) const
     foreach (User* w, users)
         if (w->getNick() == _nick)
             return w;
-    return NULL;
+    return new User(_nick, QString());
 }
 
 int Users::indexOf(QString _nick) const

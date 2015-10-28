@@ -1,13 +1,14 @@
 #ifndef PLAYERS_H
 #define PLAYERS_H
 
-#include "player.h"
+#include "uno.h"
 
+class UNO;
 class Player;
 class Players
 {
 public:
-    Players();
+    Players(UNO* _parent);
 
     inline void add(Player* _player)
     {
@@ -60,6 +61,7 @@ public:
     }
 
 private:
+    UNO* parent;
     QList<Player*> players;
     bool inversed;
 };
