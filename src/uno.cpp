@@ -474,6 +474,10 @@ void UNO::command(QString nick, QString cmd, QStringList args)
                 else
                     sendMessage((users->contains(args.at(1)) ? users->get(args.at(1))->getColoredName() : "\x02" + args.at(1) + "\x0F") + " is not in the access list");
             }
+            else if (args.first() == "list")
+            {
+                sendMessage("In the access list: " + accesslist->allKeys().join(", "));
+            }
         }
     }
 
