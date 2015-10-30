@@ -14,6 +14,7 @@
 #include "users.h"
 #include "card.h"
 #include "player.h"
+#include "commit_date.h"
 
 class Players;
 class Cards;
@@ -39,8 +40,11 @@ public:
         return players;
     }
 
-public slots:
+private slots:
+    void onSSLError();
     void onConnect();
+    void onDisconnect();
+    void onIrcMessage(IrcMessage *message);
     void onMessage(IrcPrivateMessage *message);
     void onJoin(IrcJoinMessage *message);
     void onKick(IrcKickMessage *message);
@@ -51,7 +55,6 @@ public slots:
     void onPart(IrcPartMessage *message);
     void onQuit(IrcQuitMessage *message);
 
-private slots:
     void pingTimeout();
     void versionTimeout(QString nick);
     void preGameTimeout();
@@ -70,6 +73,12 @@ private:
     bool isOp(QString user);
     bool startsWithMode(QString nick);
 
+    inline void log(QString w, unsigned int level) // Level rules: 0 = nothing; 1 += errors and warnings only; 2 += infos; 3 += libcommuni debug
+    {
+        if (level <= verbose)
+            qDebug() << qPrintable(w);
+    }
+
 private:
     Cards *pick;
     Players *players;
@@ -81,6 +90,7 @@ private:
     bool inGame, preGame, drawed, inversed, inPing, inVersion;
     unsigned int pingTimeBegin, pingTime, pingCount;
     QSettings *settings, *slaps, *colors, *scores, *bans, *accesslist;
+    unsigned int verbose;
 };
 
 #endif // UNO_H

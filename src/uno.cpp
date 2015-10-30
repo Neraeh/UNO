@@ -1,15 +1,18 @@
 #include "uno.h"
-#include "commit_date.h"
 
 UNO::UNO(QCoreApplication *_parent) : IrcConnection(_parent)
 {
     qsrand(QTime::currentTime().msec());
 
+    verbose = 0;
     pick = new Cards(this);
     players = new Players(this);
     users = new Users;
     lastCard = new Card("", "");
     inGame = false, preGame = false, drawed = false, inversed = false, inPing = false, inVersion = false;
+
+    log("[INFO] UNO [Update "COMMITDATE"] initialised", 0);
+    log("[INFO] Loading ini files...", 0);
 
     settings = new QSettings(qApp->applicationDirPath() + "/UNObox/settings.ini", QSettings::IniFormat);
     settings->setIniCodec("UTF-8");
@@ -29,7 +32,13 @@ UNO::UNO(QCoreApplication *_parent) : IrcConnection(_parent)
     accesslist = new QSettings(qApp->applicationDirPath() + "/UNObox/accesslist.ini", QSettings::IniFormat);
     accesslist->setIniCodec("UTF-8");
 
-    qputenv("IRC_DEBUG", settings->value("debug", "0").toByteArray());
+    verbose = settings->value("verbose", 0).toInt();
+    log("[INFO] Verbose level set to " + QString::number(verbose), 0);
+    if (verbose >= 3)
+        qputenv("IRC_DEBUG", "1");
+
+    if (settings->allKeys().isEmpty())
+        log("[WARN] settings.ini seams empty or missing, using default values", 1);
 
     setHost(settings->value("server", "irc.freenode.net").toString());
     setPort(settings->value("port", 6667).toInt());
@@ -41,14 +50,26 @@ UNO::UNO(QCoreApplication *_parent) : IrcConnection(_parent)
     setRealName(settings->value("realname", "UNO").toString());
     setReconnectDelay(5);
 
+    log("[INFO] Server: " + host() + ":" + QString::number(port()), 2);
+    log(QString("[INFO] SSL: ") + (isSecure() ? "true" : "false"), 2);
+    log("[INFO] Channel: " + chan, 2);
+    log("[INFO] Encoding: " + encoding(), 2);
+    log("[INFO] Username: " + userName(), 2);
+    log("[INFO] Nickname: " + nickName(), 2);
+    log("[INFO] Realname: " + realName(), 2);
+
     QVariantMap CtcpReplies;
     CtcpReplies.insert("VERSION", "\x03""01,15[""\x02""\x03""04,15UNO""\x0F""\x03""01,15]""\x02""\x03""00,14""\x16"" [Update "COMMITDATE"]");
     CtcpReplies.insert("SOURCE", "https://github.com/TheShayy/UNO");
     setCtcpReplies(CtcpReplies);
 
+    log("[INFO] Connecting", 2);
     open();
 
+    QObject::connect(this, SIGNAL(secureError()), this, SLOT(onSSLError()));
     QObject::connect(this, SIGNAL(connected()), this, SLOT(onConnect()));
+    QObject::connect(this, SIGNAL(disconnected()), this, SLOT(onDisconnect()));
+    QObject::connect(this, SIGNAL(messageReceived(IrcMessage*)), this, SLOT(onIrcMessage(IrcMessage*)));
     QObject::connect(this, SIGNAL(privateMessageReceived(IrcPrivateMessage*)), this, SLOT(onMessage(IrcPrivateMessage*)));
     QObject::connect(this, SIGNAL(joinMessageReceived(IrcJoinMessage*)), this, SLOT(onJoin(IrcJoinMessage*)));
     QObject::connect(this, SIGNAL(kickMessageReceived(IrcKickMessage*)), this, SLOT(onKick(IrcKickMessage*)));
@@ -62,6 +83,7 @@ UNO::UNO(QCoreApplication *_parent) : IrcConnection(_parent)
 
 UNO::~UNO()
 {
+    log("[INFO] Closing UNO", 2);
     if (isActive())
     {
         quit("Closed");
@@ -82,17 +104,59 @@ UNO::~UNO()
     delete bans;
 }
 
+void UNO::onSSLError()
+{
+    log("[ERROR] SSL error, set verbose level to 3 to show the details", 1);
+}
+
 void UNO::onConnect()
 {
     if (!settings->value("nspassword", QString()).toString().isEmpty())
+    {
+        log("[INFO] Connected, logging in to NickServ", 2);
         sendCommand(IrcCommand::createMessage("NickServ", "IDENTIFY " + settings->value("nspassword").toString()));
+    }
     else
+    {
+        log("[INFO] Connected, joining " + chan, 2);
         sendCommand(IrcCommand::createJoin(chan));
+    }
+}
+
+void UNO::onDisconnect()
+{
+    log("[WARN] Disconnected", 1);
+}
+
+void UNO::onIrcMessage(IrcMessage *message)
+{
+    bool ok;
+    int code = message->command().toInt(&ok);
+    if (!ok)
+        return;
+
+    switch (code)
+    {
+        case 431:
+            log("[ERROR] " + host() + " said nickname is empty, exiting", 1);
+            qApp->exit(1);
+        break;
+        case 432:
+            log("[ERROR] Erroneous nickname, exiting", 1);
+            qApp->exit(1);
+        break;
+        case 433:
+            log("[ERROR] " + nickName() + " is already in use, exiting", 1);
+            qApp->exit(1);
+        break;
+    }
 }
 
 void UNO::onMessage(IrcPrivateMessage *message)
 {
-    users->get(message->nick())->setHostname(message->host());
+    if (users->get(message->nick())->getHostname().isEmpty())
+        users->get(message->nick())->setHostname(message->host());
+
     foreach (QString w, bans->allKeys())
         if (bans->value(w) == message->host())
             return;
@@ -103,6 +167,7 @@ void UNO::onMessage(IrcPrivateMessage *message)
         return;
     else if (message->content().startsWith("!"))
     {
+        log("[INFO] " + users->get(message->nick())->getMode() + message->nick() + (isOp(message->nick()) ? " (with admin rights)" : "") + " issued command " + message->content(), 2);
         QStringList args = message->content().split(" ", QString::SkipEmptyParts);
         args.removeFirst();
         command(message->nick(), message->content().split(" ", QString::SkipEmptyParts).first().mid(1), args);
@@ -149,6 +214,7 @@ void UNO::onNames(IrcNamesMessage *message)
 
 void UNO::onNick(IrcNickMessage *message)
 {
+    log("[INFO] " + message->oldNick() + " is now " + message->nick(), 2);
     sendCommand(IrcCommand::createMessage("NickServ", "STATUS " + message->newNick()));
     users->add(new User(message->newNick(), users->get(message->oldNick())->getColor(), users->get(message->oldNick())->getMode(), users->get(message->oldNick())->getColored()));
     users->remove(message->oldNick());
@@ -166,7 +232,10 @@ void UNO::onNick(IrcNickMessage *message)
 void UNO::onNotice(IrcNoticeMessage *message)
 {
     if (message->nick() == "NickServ" && message->content().contains("You are now identified"))
+    {
+        log("[INFO] Identified. Joining " + chan, 2);
         sendCommand(IrcCommand::createJoin(chan));
+    }
     else if (message->content().startsWith("VERSION"))
     {
         sendCommand(IrcCommand::createMessage(chan, "\x02" + message->nick() + "\x0F" + " is using:" + message->content().mid(message->content().indexOf(" "))));
@@ -234,6 +303,7 @@ void UNO::preGameTimeout()
     if (!preGame)
         return;
 
+    log("[INFO] Timeout reached, the game is canceled", 2);
     sendMessage("Timeout reached, the game is canceled");
     flushMessages();
     clear();
@@ -261,12 +331,14 @@ void UNO::remPlayer(QString nick)
     if (!players->contains(nick))
         return;
 
+    log("[INFO] " + nick + " left the game", 2);
     sendMessage(players->get(nick)->getColoredName() + " left the game");
     players->remove(nick);
     turns.removeOne(nick);
 
     if (players->size() == 1 && inGame)
     {
+        log("[INFO] " + players->first() + " won the game", 2);
         sendMessage(players->get(players->first())->getColoredName() + " won the game!");
         clear();
     }
@@ -277,6 +349,7 @@ void UNO::remPlayer(QString nick)
     }
     else if (players->size() == 0 && preGame)
     {
+        log("[INFO] No player left, the game is canceled", 2);
         sendMessage("No player left, the game is canceled");
         clear();
     }
@@ -882,15 +955,10 @@ void UNO::showScores()
 
 bool UNO::isOp(QString user)
 {
-    if (accesslist->contains(user))
-    {
-        if (getUsers()->get(user)->getHostname() == accesslist->value(user))
-            return true;
-        else
-            return false;
-    }
-    else
-        return network()->prefixToMode(users->get(user)->getMode()) == "o" || network()->prefixToMode(users->get(user)->getMode()) == "q" ? true : false;
+    if (accesslist->contains(user) && users->get(user)->getHostname() == accesslist->value(user))
+        return true;
+
+    return network()->prefixToMode(users->get(user)->getMode()) == "o" || network()->prefixToMode(users->get(user)->getMode()) == "q" ? true : false;
 }
 
 bool UNO::startsWithMode(QString nick)

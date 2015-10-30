@@ -20,6 +20,9 @@ Once built, UNO will be available inside the src directory
 ```
 Once built, UNO.exe will be available inside the src\release directory
 
+To know UNO's version, you can send a CTCP VERSION request or launch it with --version or -v argument
+Latest update date is in src/commit_date.h
+
 ### External library
 - libcommuni (https://github.com/communi/libcommuni)
 
