@@ -10,17 +10,17 @@ class Players
 public:
     Players(UNO* _parent);
 
-    inline void add(Player* _player)
+    void add(Player* _player)
     {
         players.append(_player);
     }
 
-    inline void remove(QString _name)
+    void remove(QString _name)
     {
         players.removeAt(indexOf(_name));
     }
 
-    inline void remove(Player *_player)
+    void remove(Player *_player)
     {
         players.removeOne(_player);
     }
@@ -30,7 +30,7 @@ public:
     QString toString() const;
     QString first() const;
 
-    inline Player* rand() const
+    Player* rand() const
     {
         return players.at(qrand() % players.size());
     }
@@ -38,24 +38,24 @@ public:
     Player* get(QString _name) const;
     int indexOf(QString _name) const;
 
-    inline int size() const
+    int size() const
     {
         return players.size();
     }
 
-    inline bool isEmpty() const
+    bool isEmpty() const
     {
         return players.size() - 1 == 0 ? true : false;
     }
 
-    inline bool isInversed() const
+    bool isInversed() const
     {
         return inversed;
     }
 
     void clear();
 
-    inline QList<Player*> getList() const
+    QList<Player*> getList() const
     {
         return players;
     }

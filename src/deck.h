@@ -13,17 +13,17 @@ public:
     QString randCards(int _count, bool colored = true);
     void remCard(QString _color, QString _id);
 
-    inline QList<Card*> getList() const
+    QList<Card*> getList() const
     {
         return cards;
     }
 
-    inline int size() const
+    int size() const
     {
         return cards.size();
     }
 
-    inline bool isEmpty() const
+    bool isEmpty() const
     {
         return cards.isEmpty();
     }

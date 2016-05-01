@@ -8,12 +8,12 @@ class Card
 public:
     Card(QString _color, QString _id);
 
-    inline QString getColor() const
+    QString getColor() const
     {
         return color;
     }
 
-    inline QString getId() const
+    QString getId() const
     {
         return id;
     }

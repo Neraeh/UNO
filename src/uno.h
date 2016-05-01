@@ -9,6 +9,7 @@
 #include <QTimer>
 #include <QHash>
 #include <QProcess>
+#include <QTranslator>
 #include "cards.h"
 #include "players.h"
 #include "users.h"
@@ -25,17 +26,24 @@ public:
     UNO(QCoreApplication *_parent = 0);
     ~UNO();
 
-    inline Cards* getCards() const
+    enum Log {
+        INFO,
+        WARNING,
+        ERROR,
+        INIT
+    };
+
+    Cards* getCards() const
     {
         return pick;
     }
 
-    inline Users* getUsers() const
+    Users* getUsers() const
     {
         return users;
     }
 
-    inline Players* getPlayers() const
+    Players* getPlayers() const
     {
         return players;
     }
@@ -56,7 +64,7 @@ private slots:
     void onQuit(IrcQuitMessage *message);
 
     void pingTimeout();
-    void versionTimeout(QString nick);
+    void versionTimeout();
     void preGameTimeout();
 
 private:
@@ -73,10 +81,24 @@ private:
     bool isOp(QString user);
     bool startsWithMode(QString nick);
 
-    inline void log(QString w, unsigned int level) // Level rules: 0 = nothing; 1 += errors and warnings only; 2 += infos; 3 += libcommuni debug
+    void log(Log l, QString w) // Level rules: 0 = nothing; 1 += errors and warnings only; 2 += infos; 3 += libcommuni debug
     {
-        if (level <= verbose)
+        switch (l) {
+        case INFO:
+            if (verbose >= 2)
+                qDebug() << qPrintable("[" + tr("INFO") + "] " + w);
+            break;
+        case WARNING:
+            if (verbose >= 1)
+                qDebug() << qPrintable("[" + tr("WARN") + "] " + w);
+            break;
+        case ERROR:
+            if (verbose >= 1)
+                qDebug() << qPrintable("[" + tr("ERROR") + "] " + w);
+            break;
+        case INIT:
             qDebug() << qPrintable(w);
+        }
     }
 
 private:
@@ -85,7 +107,7 @@ private:
     QStringList turns, messages;
     QHash<QString,QString> notices;
     Card *lastCard;
-    QString currPlayer, currPing, chan;
+    QString currPlayer, currPing, currVersion, chan;
     Users *users;
     bool inGame, preGame, drawed, inversed, inPing, inVersion;
     unsigned int pingTimeBegin, pingTime, pingCount;

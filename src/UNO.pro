@@ -5,7 +5,6 @@
 #-------------------------------------------------
 
 QT       += core network
-
 QT       -= gui
 
 TARGET = UNO
@@ -40,3 +39,5 @@ HEADERS += \
     commit_date.h
 
 include($$_PRO_FILE_PWD_/../libcommuni/src/core/core.pri)
+
+TRANSLATIONS = translations/fr.ts
