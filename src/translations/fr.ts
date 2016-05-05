@@ -4,22 +4,22 @@
 <context>
     <name>UNO</name>
     <message>
-        <location filename="../uno.cpp" line="14"/>
+        <location filename="../uno.cpp" line="42"/>
         <source>UNO [Update %1] initialised</source>
         <translation>UNO [Version %1] initialisé</translation>
     </message>
     <message>
-        <location filename="../uno.cpp" line="15"/>
+        <location filename="../uno.cpp" line="14"/>
         <source>Loading ini files...</source>
         <translation>Chargement des fichier ini...</translation>
     </message>
     <message>
-        <location filename="../uno.cpp" line="36"/>
+        <location filename="../uno.cpp" line="35"/>
         <source>Verbose level set to %1</source>
         <translation>Niveau de logs reglé sur %1</translation>
     </message>
     <message>
-        <location filename="../uno.cpp" line="41"/>
+        <location filename="../uno.cpp" line="40"/>
         <source>settings.ini is empty or missing, using default values</source>
         <translation>settings.ini est vide ou manquant, les valeurs par défaut sont utilisées</translation>
     </message>
@@ -164,6 +164,7 @@
     </message>
     <message>
         <location filename="../uno.cpp" line="342"/>
+        <location filename="../uno.cpp" line="862"/>
         <source>%1 won the game!</source>
         <translation>%1 a gagné la partie !</translation>
     </message>
@@ -369,7 +370,7 @@
     <message>
         <location filename="../uno.cpp" line="541"/>
         <source>%1 !list : display players list</source>
-        <translation>%1 !list : affiche la liste des joueurs dans la partie</translation>
+        <translation>%1 !list : afficher la liste des joueurs dans la partie</translation>
     </message>
     <message>
         <location filename="../uno.cpp" line="543"/>
@@ -600,7 +601,7 @@
     <message>
         <location filename="../uno.cpp" line="797"/>
         <source>%1 draws 4 cards</source>
-        <translation>%1 a pioché 4 cartes</translation>
+        <translation>%1 pioche 4 cartes</translation>
     </message>
     <message>
         <location filename="../uno.cpp" line="840"/>
@@ -629,14 +630,13 @@
         <translation>%1 est en %2 !</translation>
     </message>
     <message>
-        <location filename="../uno.cpp" line="862"/>
         <source>%1 won the game !</source>
-        <translation>%1 a gagné la partie !</translation>
+        <translation type="vanished">%1 a gagné la partie !</translation>
     </message>
     <message>
         <location filename="../uno.cpp" line="883"/>
         <source>%1 earned %2 points !</source>
-        <translation>%1 a obtenu %2 points !</translation>
+        <translation>%1 obtient %2 points !</translation>
     </message>
     <message>
         <location filename="../uno.cpp" line="886"/>
@@ -664,17 +664,17 @@
         <translation>%1. %2 : %3 (%4 points sur %5 victoires pour %6 parties)</translation>
     </message>
     <message>
-        <location filename="../uno.h" line="88"/>
+        <location filename="../uno.h" line="89"/>
         <source>INFO</source>
         <translation>INFO</translation>
     </message>
     <message>
-        <location filename="../uno.h" line="92"/>
+        <location filename="../uno.h" line="93"/>
         <source>WARN</source>
         <translation>ATTENTION</translation>
     </message>
     <message>
-        <location filename="../uno.h" line="96"/>
+        <location filename="../uno.h" line="97"/>
         <source>ERROR</source>
         <translation>ERREUR</translation>
     </message>

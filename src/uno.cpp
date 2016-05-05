@@ -859,7 +859,7 @@ void UNO::command(QString nick, QString cmd, QStringList args)
         sendMessage(tr("%1 is %2 !").arg(players->get(currPlayer)->getColoredName() + "\x16").arg("\x03""01,15[""\x02""\x03""04,15UNO""\x0F""\x03""01,15]""\x02""\x03""00,14""\x16"));
     else if (end && players->get(currPlayer)->getDeck()->size() == 0)
     {
-        sendMessage(tr("%1 won the game !").arg(players->get(currPlayer)->getColoredName()));
+        sendMessage(tr("%1 won the game!").arg(players->get(currPlayer)->getColoredName()));
 
         scores->setValue(currPlayer, scores->value(currPlayer, 0).toInt() + 1);
         int points = scores->value("Points/" + currPlayer, 0).toInt(), origpoints = points;
