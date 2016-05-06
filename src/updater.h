@@ -8,6 +8,8 @@
 #include <QThread>
 #include "uno.h"
 
+#ifndef Q_OS_WIN
+
 class Updater : public QObject
 {
     Q_OBJECT
@@ -29,5 +31,7 @@ private:
     QProcess *p;
     UNO *parent;
 };
+
+#endif
 
 #endif // UPDATER_H

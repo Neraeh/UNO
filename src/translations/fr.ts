@@ -142,7 +142,7 @@
     <message>
         <location filename="../uno.cpp" line="246"/>
         <source>%1 is using: %2</source>
-        <translation>%1 utilisé : %2</translation>
+        <translation>%1 utilise : %2</translation>
     </message>
     <message>
         <location filename="../uno.cpp" line="292"/>

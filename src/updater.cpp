@@ -1,4 +1,5 @@
 #include "updater.h"
+#ifndef Q_OS_WIN
 
 Updater::Updater(QString dir, UNO *parent) {
     this->parent = parent;
@@ -99,3 +100,5 @@ void Updater::files() {
 
     emit done();
 }
+
+#endif
