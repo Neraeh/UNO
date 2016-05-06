@@ -7,7 +7,8 @@
 QT       += core network
 QT       -= gui
 
-TARGET = UNO
+TARGET = UNObot
+DESTDIR = ../build
 CONFIG   += console
 CONFIG   -= app_bundle
 
@@ -25,7 +26,8 @@ SOURCES += main.cpp \
     players.cpp \
     player.cpp \
     user.cpp \
-    users.cpp
+    users.cpp \
+    updater.cpp
 
 HEADERS += \
     uno.h \
@@ -36,7 +38,8 @@ HEADERS += \
     player.h \
     user.h \
     users.h \
-    commit_date.h
+    commit_date.h \
+    updater.h
 
 include($$_PRO_FILE_PWD_/../libcommuni/src/core/core.pri)
 

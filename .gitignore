@@ -2,7 +2,7 @@
 preparerelease
 
 # Build dir
-/build
+/build*
 
 # C++ objects and libs
 

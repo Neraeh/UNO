@@ -10,15 +10,20 @@
 #include <QHash>
 #include <QProcess>
 #include <QTranslator>
+#include <QFile>
+#include <QDir>
+#include <QThread>
 #include "cards.h"
 #include "players.h"
 #include "users.h"
 #include "card.h"
 #include "player.h"
+#include "updater.h"
 #include "commit_date.h"
 
 class Players;
 class Cards;
+class Updater;
 class UNO : public IrcConnection
 {
     Q_OBJECT
@@ -32,6 +37,26 @@ public:
         ERROR,
         INIT
     };
+
+    void log(Log l, QString w) // Level rules: 0 = nothing; 1 += errors and warnings only; 2 += infos; 3 += libcommuni debug
+    {
+        switch (l) {
+        case INFO:
+            if (verbose >= 2)
+                qDebug() << qPrintable("[" + tr("INFO") + "] " + w);
+            break;
+        case WARNING:
+            if (verbose >= 1)
+                qDebug() << qPrintable("[" + tr("WARN") + "] " + w);
+            break;
+        case ERROR:
+            if (verbose >= 1)
+                qDebug() << qPrintable("[" + tr("ERROR") + "] " + w);
+            break;
+        case INIT:
+            qDebug() << qPrintable(w);
+        }
+    }
 
     Cards* getCards() const
     {
@@ -63,6 +88,10 @@ private slots:
     void onPart(IrcPartMessage *message);
     void onQuit(IrcQuitMessage *message);
 
+    void onUpdaterStep(QString step);
+    void onUpdaterError(QString step);
+    void onUpdaterDone();
+
     void pingTimeout();
     void versionTimeout();
     void preGameTimeout();
@@ -73,33 +102,13 @@ private:
     void remPlayer(QString nick);
     void clear();
     void sendNotice(QString target, QString message);
-    void sendMessage(QString message, Card* card = 0);
+    void sendMessage(QString message, Card* card = nullptr, bool direct = false);
     void flushMessages();
     void command(QString nick, QString cmd, QStringList args);
     QString showTurns() const;
     void showScores();
     bool isOp(QString user);
     bool startsWithMode(QString nick);
-
-    void log(Log l, QString w) // Level rules: 0 = nothing; 1 += errors and warnings only; 2 += infos; 3 += libcommuni debug
-    {
-        switch (l) {
-        case INFO:
-            if (verbose >= 2)
-                qDebug() << qPrintable("[" + tr("INFO") + "] " + w);
-            break;
-        case WARNING:
-            if (verbose >= 1)
-                qDebug() << qPrintable("[" + tr("WARN") + "] " + w);
-            break;
-        case ERROR:
-            if (verbose >= 1)
-                qDebug() << qPrintable("[" + tr("ERROR") + "] " + w);
-            break;
-        case INIT:
-            qDebug() << qPrintable(w);
-        }
-    }
 
 private:
     Cards *pick;
@@ -113,6 +122,7 @@ private:
     unsigned int pingTimeBegin, pingTime, pingCount;
     QSettings *settings, *slaps, *colors, *scores, *bans, *accesslist;
     unsigned int verbose;
+    Updater *updater;
 };
 
 #endif // UNO_H

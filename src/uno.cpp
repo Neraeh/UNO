@@ -10,6 +10,7 @@ UNO::UNO(QCoreApplication *_parent) : IrcConnection(_parent)
     users = new Users;
     lastCard = new Card("", "");
     inGame = false, preGame = false, drawed = false, inversed = false, inPing = false, inVersion = false;
+    updater = new Updater(qApp->applicationDirPath(), this);
 
     log(INIT, tr("Loading ini files..."));
 
@@ -79,6 +80,10 @@ UNO::UNO(QCoreApplication *_parent) : IrcConnection(_parent)
     QObject::connect(this, SIGNAL(noticeMessageReceived(IrcNoticeMessage*)), this, SLOT(onNotice(IrcNoticeMessage*)));
     QObject::connect(this, SIGNAL(partMessageReceived(IrcPartMessage*)), this, SLOT(onPart(IrcPartMessage*)));
     QObject::connect(this, SIGNAL(quitMessageReceived(IrcQuitMessage*)), this, SLOT(onQuit(IrcQuitMessage*)));
+
+    QObject::connect(updater, SIGNAL(step(QString)), this, SLOT(onUpdaterStep(QString)));
+    QObject::connect(updater, SIGNAL(error(QString)), this, SLOT(onUpdaterError(QString)));
+    QObject::connect(updater, SIGNAL(done()), this, SLOT(onUpdaterDone()));
 }
 
 UNO::~UNO()
@@ -125,7 +130,7 @@ void UNO::onConnect()
 
 void UNO::onDisconnect()
 {
-    log(WARNING, "Disconnected");
+    log(WARNING, tr("Disconnected"));
 }
 
 void UNO::onIrcMessage(IrcMessage *message)
@@ -282,6 +287,28 @@ void UNO::onQuit(IrcQuitMessage *message)
     users->remove(message->nick());
 }
 
+void UNO::onUpdaterStep(QString step) {
+    if (step == "git")
+        sendMessage(tr("Running git"), nullptr, true);
+    else if (step == "configure")
+        sendMessage(tr("Running configure"), nullptr, true);
+    else if (step == "make")
+        sendMessage(tr("Building"), nullptr, true);
+    else if (step == "files")
+        sendMessage(tr("Replacing old files"), nullptr, true);
+}
+
+void UNO::onUpdaterError(QString step) {
+    sendMessage(tr("Error processing step '%1'").arg(step), nullptr, true);
+}
+
+void UNO::onUpdaterDone() {
+    sendMessage(tr("Launching freshly made UNObot"), nullptr, true);
+    quit(tr("Updating..."));
+    QProcess::startDetached("/bin/bash", QStringList() << qApp->applicationDirPath() + "/startUNO", qApp->applicationDirPath());
+    qApp->exit();
+}
+
 void UNO::pingTimeout()
 {
     if (!inPing)
@@ -374,12 +401,17 @@ void UNO::sendNotice(QString target, QString message)
     notices.insertMulti(target, message);
 }
 
-void UNO::sendMessage(QString message, Card *card)
+void UNO::sendMessage(QString message, Card *card, bool direct)
 {
     QString ncmessage = "\x02""[UNO] " + message;
     message = "\x03""01,15[""\x02""\x03""04,15UNO""\x0F""\x03""01,15]""\x02""\x03""00,14 " + message.replace("\x02", "\x03""04,15").replace("\x0F", "\x03""00,14") + " ";
-    messages.append(card != 0 ? message.replace("%c", card->toString().replace("\x02", "\x03""04,15").replace("\x0F", "\x03""00,14")) : message);
-    if (card != 0)
+
+    if (!direct)
+        messages.append(card != nullptr ? message.replace("%c", card->toString().replace("\x02", "\x03""04,15").replace("\x0F", "\x03""00,14")) : message);
+    else
+        sendCommand(IrcCommand::createMessage(chan, card != nullptr ? message.replace("%c", card->toString().replace("\x02", "\x03""04,15").replace("\x0F", "\x03""00,14")) : message));
+
+    if (card != nullptr)
     {
         ncmessage.replace("%c", card->toString(false));
         foreach (User *w, users->getList())
@@ -418,14 +450,8 @@ void UNO::command(QString nick, QString cmd, QStringList args)
         #ifndef Q_OS_WIN
         else if (cmd == "update")
         {
-            sendMessage(tr("Updating %1").arg(nickName()));
-            if (QProcess::startDetached(qApp->applicationDirPath() + "/updateUNO"))
-            {
-                quit(tr("Updating..."));
-                qApp->exit();
-            }
-            else
-                sendMessage(tr("Unable to start updateUNO"));
+            sendMessage(tr("Updating %1").arg(nickName()), nullptr, true);
+            updater->start();
         }
         #endif
         else if (cmd == "kick" && !args.isEmpty())

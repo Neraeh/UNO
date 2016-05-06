@@ -1,0 +1,25 @@
+#!/bin/bash
+export QT_SELECT=5
+
+function errchk {
+    "$@"
+    local status=$?
+    if [ $status -ne 0 ]; then
+        echo "Error with $1" >&2
+        exit 1
+    fi
+    return $status
+}
+
+if [ ! -d "build" ]; then
+    mkdir build
+fi
+
+cd src
+echo Building UNO
+make -j`nproc`
+echo "Copying (and replacing) UNObox and startUNO"
+cp -rf ./{startUNO,UNObox,translations} ../build/
+echo Done
+echo You can now copy the build directory anywhere and use UNO as you like
+echo Enjoy!
