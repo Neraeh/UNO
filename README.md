@@ -8,9 +8,9 @@ Qt5 is required to build it
 ```
 $ git clone https://github.com/TheShayy/UNO.git && cd UNO
 $ ./configure
-$ make
+$ ./buildUNO
 ```
-Once built, UNO will be available inside the src directory
+Once built, you can copy UNO and its environment by copying the UNO/build directory
 
 # Windows
 ```
@@ -20,8 +20,9 @@ Once built, UNO will be available inside the src directory
 ```
 Once built, UNO.exe will be available inside the src\release directory
 
-To know UNO's version, you can send a CTCP VERSION request or launch it with --version or -v argument
-Latest update date is in src/commit_date.h
+### Infos
+- Latest update date is in src/commit_date.h
+- To see which version you are using, you can send it a CTCP VERSION or launch it with --version or -v argument
 
 ### External library
 - libcommuni (https://github.com/communi/libcommuni)

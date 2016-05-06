@@ -505,6 +505,22 @@ void UNO::command(QString nick, QString cmd, QStringList args)
                 sendMessage(tr("In the access list: %1").arg(accesslist->allKeys().join(", ")));
             }
         }
+        else if (cmd == "merge" && args.size() == 2)
+        {
+            if (!scores->contains(args.first()))
+                sendMessage(tr("%1 was not found").arg("\x02" + args.first() + "\x0F"));
+            else if (!scores->contains(args.at(1)))
+                sendMessage(tr("%1 was not found").arg("\x02" + args.at(1) + "\x0F"));
+            else {
+                scores->setValue(args.first(), scores->value(args.first()).toInt() + scores->value(args.at(1)).toInt());
+                scores->remove(args.at(1));
+                scores->setValue("Points/" + args.first(), scores->value("Points/" + args.first()).toInt() + scores->value("Points/" + args.at(1)).toInt());
+                scores->remove("Points/" + args.at(1));
+                scores->setValue("Total/" + args.first(), scores->value("Total/" + args.first()).toInt() + scores->value("Total/" + args.at(1)).toInt());
+                scores->remove("Total/" + args.at(1));
+                sendMessage(tr("%1 and %2 have successfully been merged into %1").arg(users->contains(args.first()) ? users->get(args.first())->getColoredName() : "\x02" + args.first() + "\x0F").arg(users->contains(args.at(1)) ? users->get(args.at(1))->getColoredName() : "\x02" + args.at(1) + "\x0F"));
+            }
+        }
     }
 
     if (cmd == "color") {
