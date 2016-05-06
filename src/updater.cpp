@@ -66,7 +66,6 @@ void Updater::files() {
     p->setObjectName("files");
     QDir wqdir = QDir(wdir + "/translations");
     QFile f("");
-    wdir += "/../build";
     QFileInfoList files = wqdir.entryInfoList();
 
     f.setFileName(curr + "/UNObot");
