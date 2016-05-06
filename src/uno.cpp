@@ -289,21 +289,21 @@ void UNO::onQuit(IrcQuitMessage *message)
 
 void UNO::onUpdaterStep(QString step) {
     if (step == "git")
-        sendMessage(tr("Running git"), nullptr, true);
+        sendMessage(tr("Running git"), NULL, true);
     else if (step == "configure")
-        sendMessage(tr("Running configure"), nullptr, true);
+        sendMessage(tr("Running configure"), NULL, true);
     else if (step == "make")
-        sendMessage(tr("Building"), nullptr, true);
+        sendMessage(tr("Building"), NULL, true);
     else if (step == "files")
-        sendMessage(tr("Replacing old files"), nullptr, true);
+        sendMessage(tr("Replacing old files"), NULL, true);
 }
 
 void UNO::onUpdaterError(QString step) {
-    sendMessage(tr("Error processing step '%1'").arg(step), nullptr, true);
+    sendMessage(tr("Error processing step '%1'").arg(step), NULL, true);
 }
 
 void UNO::onUpdaterDone() {
-    sendMessage(tr("Launching freshly made UNObot"), nullptr, true);
+    sendMessage(tr("Launching freshly made UNObot"), NULL, true);
     quit(tr("Updating..."));
     QProcess::startDetached("/bin/bash", QStringList() << qApp->applicationDirPath() + "/startUNO", qApp->applicationDirPath());
     qApp->exit();
@@ -407,11 +407,11 @@ void UNO::sendMessage(QString message, Card *card, bool direct)
     message = "\x03""01,15[""\x02""\x03""04,15UNO""\x0F""\x03""01,15]""\x02""\x03""00,14 " + message.replace("\x02", "\x03""04,15").replace("\x0F", "\x03""00,14") + " ";
 
     if (!direct)
-        messages.append(card != nullptr ? message.replace("%c", card->toString().replace("\x02", "\x03""04,15").replace("\x0F", "\x03""00,14")) : message);
+        messages.append(card != NULL ? message.replace("%c", card->toString().replace("\x02", "\x03""04,15").replace("\x0F", "\x03""00,14")) : message);
     else
-        sendCommand(IrcCommand::createMessage(chan, card != nullptr ? message.replace("%c", card->toString().replace("\x02", "\x03""04,15").replace("\x0F", "\x03""00,14")) : message));
+        sendCommand(IrcCommand::createMessage(chan, card != NULL ? message.replace("%c", card->toString().replace("\x02", "\x03""04,15").replace("\x0F", "\x03""00,14")) : message));
 
-    if (card != nullptr)
+    if (card != NULL)
     {
         ncmessage.replace("%c", card->toString(false));
         foreach (User *w, users->getList())
@@ -450,7 +450,7 @@ void UNO::command(QString nick, QString cmd, QStringList args)
         #ifndef Q_OS_WIN
         else if (cmd == "update")
         {
-            sendMessage(tr("Updating %1").arg(nickName()), nullptr, true);
+            sendMessage(tr("Updating %1").arg(nickName()), NULL, true);
             updater->start();
         }
         #endif
