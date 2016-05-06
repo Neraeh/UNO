@@ -12,14 +12,14 @@ function errchk {
 }
 
 if [ ! -d "build" ]; then
-    mkdir build
+    errchk mkdir build
 fi
 
 cd src
 echo Building UNO
-make -j`nproc`
+errchk make -j`nproc`
 echo "Copying (and replacing) UNObox and startUNO"
-cp -rf ./{startUNO,UNObox,translations} ../build/
+errchk cp -rf ./{startUNO,UNObox,translations} ../build/
 echo Done
 echo You can now copy the build directory anywhere and use UNO as you like
 echo Enjoy!

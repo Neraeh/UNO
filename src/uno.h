@@ -102,7 +102,7 @@ private:
     void remPlayer(QString nick);
     void clear();
     void sendNotice(QString target, QString message);
-    void sendMessage(QString message, Card* card = nullptr, bool direct = false);
+    void sendMessage(QString message, Card* card = NULL, bool direct = false);
     void flushMessages();
     void command(QString nick, QString cmd, QStringList args);
     QString showTurns() const;
