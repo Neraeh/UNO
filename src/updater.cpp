@@ -1,7 +1,8 @@
 #include "updater.h"
 #ifndef Q_OS_WIN
 
-Updater::Updater(QString dir, UNO *parent) {
+Updater::Updater(QString dir, UNO *parent)
+{
     this->parent = parent;
     wdir = dir + "/update";
     curr = dir;
@@ -15,12 +16,15 @@ Updater::Updater(QString dir, UNO *parent) {
     wqdir.mkdir(wdir);
 }
 
-void Updater::start() {
+void Updater::start()
+{
     git();
 }
 
-void Updater::next(int code, QProcess::ExitStatus status) {
-    if (code != 0 || status == QProcess::CrashExit) {
+void Updater::next(int code, QProcess::ExitStatus status)
+{
+    if (code != 0 || status == QProcess::CrashExit)
+    {
         emit error(p->objectName());
         return;
     }
@@ -33,7 +37,8 @@ void Updater::next(int code, QProcess::ExitStatus status) {
         files();
 }
 
-void Updater::git() {
+void Updater::git()
+{
     emit step("git");
     p->setObjectName("git");
     p->setProgram("git");
@@ -42,7 +47,8 @@ void Updater::git() {
     p->start();
 }
 
-void Updater::configure() {
+void Updater::configure()
+{
     emit step("configure");
     p->setObjectName("configure");
     wdir += "/UNO";
@@ -52,7 +58,8 @@ void Updater::configure() {
     p->start();
 }
 
-void Updater::make() {
+void Updater::make()
+{
     emit step("make");
     p->setObjectName("make");
     wdir += "/src";
@@ -62,7 +69,8 @@ void Updater::make() {
     p->start();
 }
 
-void Updater::files() {
+void Updater::files()
+{
     emit step("files");
     p->setObjectName("files");
     QDir wqdir = QDir(wdir + "/translations");
@@ -71,7 +79,8 @@ void Updater::files() {
 
     f.setFileName(curr + "/UNObot");
     f.remove();
-    if (!f.copy(wdir + "/../build/UNObot", curr + "/UNObot")) {
+    if (!f.copy(wdir + "/../build/UNObot", curr + "/UNObot"))
+    {
         emit error("files");
         parent->log(UNO::ERROR, "UNObot: " + f.errorString());
         return;
@@ -79,18 +88,22 @@ void Updater::files() {
 
     f.setFileName(curr + "/startUNO");
     f.remove();
-    if (!f.copy(wdir + "/startUNO", curr + "/startUNO")) {
+    if (!f.copy(wdir + "/startUNO", curr + "/startUNO"))
+    {
         emit error("files");
         parent->log(UNO::ERROR, "startUNO: " + f.errorString());
         return;
     }
 
-    foreach (QFileInfo w, files) {
-        if (!w.isDir()) {
+    foreach (QFileInfo w, files)
+    {
+        if (!w.isDir())
+        {
             f.setFileName(curr + "/translations/" + w.fileName());
             f.remove();
             QDir(curr + "/translations/" + w.fileName()).mkpath(curr + "/translations/");
-            if (!f.copy(w.absoluteFilePath(), curr + "/translations/" + w.fileName())) {
+            if (!f.copy(w.absoluteFilePath(), curr + "/translations/" + w.fileName()))
+            {
                 emit error("files");
                 parent->log(UNO::ERROR, w.fileName() + ": " + f.errorString());
                 return;

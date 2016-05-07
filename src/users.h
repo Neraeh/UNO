@@ -29,6 +29,8 @@ public:
         return users;
     }
 
+    User* rand() const;
+
 private:
     QList<User*> users;
 };

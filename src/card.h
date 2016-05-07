@@ -1,14 +1,25 @@
 #ifndef CARD_H
 #define CARD_H
 
+#include <QObject>
 #include <QString>
+
+enum Color
+{
+    RED,
+    GREEN,
+    BLUE,
+    YELLOW,
+    NONE
+};
 
 class Card
 {
 public:
+    Card(Color _color, QString _id);
     Card(QString _color, QString _id);
 
-    QString getColor() const
+    Color getColor() const
     {
         return color;
     }
@@ -18,10 +29,13 @@ public:
         return id;
     }
 
+    static QString toString(Color color);
     QString toString(bool colored = true) const;
+    static Color toColor(QString color);
 
 private:
-    QString color, id;
+    Color color;
+    QString id;
 };
 
 #endif // CARD_H

@@ -3,8 +3,9 @@ UNO IRC bot
 **UNO** is written with the Qt Framework.
 
 ## Usage
-Qt5 is required to build it
+Qt5 and libcommuni are required to build it
 # Linux
+**Don't forget to build and install libcommuni (link below) before trying to build UNO**
 ```
 $ git clone https://github.com/TheShayy/UNO.git && cd UNO
 $ ./configure
@@ -13,6 +14,7 @@ $ ./buildUNO
 Once built, you can copy UNO and its environment by copying the UNO/build directory
 
 # Windows
+**Don't forget to build and install libcommuni (link below) before trying to build UNO**
 ```
 > git clone https://github.com/TheShayy/UNO.git && cd UNO
 > call configure.bat

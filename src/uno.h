@@ -21,9 +21,11 @@
 #include "updater.h"
 #include "commit_date.h"
 
-class Players;
-class Cards;
-class Updater;
+typedef void (UNO::*fp)(QString, QStringList);
+
+QT_FORWARD_DECLARE_CLASS(Players)
+QT_FORWARD_DECLARE_CLASS(Cards)
+QT_FORWARD_DECLARE_CLASS(Updater)
 class UNO : public IrcConnection
 {
     Q_OBJECT
@@ -31,7 +33,8 @@ public:
     UNO(QCoreApplication *_parent = 0);
     ~UNO();
 
-    enum Log {
+    enum Log
+    {
         INFO,
         WARNING,
         ERROR,
@@ -40,7 +43,8 @@ public:
 
     void log(Log l, QString w) // Level rules: 0 = nothing; 1 += errors and warnings only; 2 += infos; 3 += libcommuni debug
     {
-        switch (l) {
+        switch (l)
+        {
         case INFO:
             if (verbose >= 2)
                 qDebug() << qPrintable("[" + tr("INFO") + "] " + w);
@@ -101,7 +105,8 @@ private:
     QString nextPlayer() const;
     void remPlayer(QString nick);
     void clear();
-    void sendNotice(QString target, QString message);
+    void sendRawNotice(QString target, QString message);
+    void sendNotice(QString target, QString message, Card *card = NULL);
     void sendMessage(QString message, Card* card = NULL, bool direct = false);
     void flushMessages();
     void command(QString nick, QString cmd, QStringList args);
@@ -110,20 +115,51 @@ private:
     bool isOp(QString user);
     bool startsWithMode(QString nick);
 
+// Commands
+    void exit(QString nick, QStringList args);
+#ifndef Q_OS_WIN
+    void update(QString nick, QStringList args);
+#endif
+    void kick(QString nick, QStringList args);
+    void ban(QString nick, QStringList args);
+    void unban(QString nick, QStringList args);
+    void al(QString nick, QStringList args);
+    void merge(QString nick, QStringList args);
+    void color(QString nick, QStringList args);
+    void nocolor(QString nick, QStringList args);
+    void scores(QString nick, QStringList args);
+    void help(QString nick, QStringList args);
+    void rules(QString nick, QStringList args);
+    void version(QString nick, QStringList args);
+    void slap(QString nick, QStringList args);
+    void ping(QString nick, QStringList args);
+    void list(QString nick, QStringList args);
+    void quitGame(QString nick, QStringList args);
+    void joinGame(QString nick, QStringList args);
+    void beginGame(QString nick, QStringList args);
+    void uno(QString nick, QStringList args);
+    void draw(QString nick, QStringList args);
+    void endTurn(QString nick, QStringList args);
+    void hand(QString nick, QStringList args);
+    void cardsGame(QString nick, QStringList args);
+    void play(QString nick, QStringList args);
+
+    void turnEnd();
+
 private:
+    QHash<QString,fp> *commands;
     Cards *pick;
     Players *players;
     QStringList turns, messages;
-    QHash<QString,QString> notices;
+    QMultiMap<QString,QString> notices;
     Card *lastCard;
     QString currPlayer, currPing, currVersion, chan;
     Users *users;
-    bool inGame, preGame, drawed, inversed, inPing, inVersion;
+    bool cnf, inGame, preGame, drawed, inversed, inPing, inVersion;
     unsigned int pingTimeBegin, pingTime, pingCount;
-    QSettings *settings, *slaps, *colors, *scores, *bans, *accesslist;
+    QSettings *settings, *slaps, *colors, *score, *bans, *accesslist;
     unsigned int verbose;
     Updater *updater;
 };
 
 #endif // UNO_H
-

@@ -4,8 +4,8 @@
 #include "uno.h"
 #include "deck.h"
 
-class Deck;
-class UNO;
+QT_FORWARD_DECLARE_CLASS(Deck)
+QT_FORWARD_DECLARE_CLASS(UNO)
 class Player
 {
 public:

@@ -3,8 +3,8 @@
 
 #include "uno.h"
 
-class UNO;
-class Card;
+QT_FORWARD_DECLARE_CLASS(UNO)
+QT_FORWARD_DECLARE_CLASS(Card)
 class Cards
 {
 public:

@@ -9,8 +9,9 @@ QT       -= gui
 
 TARGET = UNObot
 DESTDIR = ../build
-CONFIG   += console
+CONFIG   += console communi
 CONFIG   -= app_bundle
+COMMUNI += core
 
 QMAKE_CFLAGS_RELEASE += -march=native -O3 -pipe -fomit-frame-pointer
 QMAKE_CXXFLAGS_RELEASE += $$QMAKE_CFLAGS_RELEASE
@@ -27,7 +28,8 @@ SOURCES += main.cpp \
     player.cpp \
     user.cpp \
     users.cpp \
-    updater.cpp
+    updater.cpp \
+    commands.cpp
 
 HEADERS += \
     uno.h \
@@ -40,7 +42,5 @@ HEADERS += \
     users.h \
     commit_date.h \
     updater.h
-
-include($$_PRO_FILE_PWD_/../libcommuni/src/core/core.pri)
 
 TRANSLATIONS = translations/fr.ts

@@ -23,7 +23,7 @@ QString Deck::randCards(int _count, bool colored)
     return newCards;
 }
 
-void Deck::remCard(QString _color, QString _id)
+void Deck::remCard(Color _color, QString _id)
 {
     foreach (Card* w, cards)
     {
@@ -43,10 +43,10 @@ bool Deck::contains(Card* _card) const
     return false;
 }
 
-bool Deck::containsColor(QString _color) const
+bool Deck::containsColor(Color _color) const
 {
     foreach (Card* w, cards)
-        if (w->getColor() == _color.toUpper())
+        if (w->getColor() == _color)
             return true;
     return false;
 }
@@ -61,8 +61,61 @@ bool Deck::containsId(QString _id) const
 
 QString Deck::toString(bool colored) const
 {
-    QString deck;
+    QMultiMap<int,Card*> red;
+    QMultiMap<int,Card*> green;
+    QMultiMap<int,Card*> blue;
+    QMultiMap<int,Card*> yellow;
+    QMultiMap<int,Card*> none;
+    bool ok;
+    int nbr;
+
     foreach (Card* w, cards)
+    {
+        nbr = w->getId().toInt(&ok, 10);
+        if (ok)
+        {
+            switch (w->getColor())
+            {
+            case RED:
+                red.insert(nbr, w);
+                break;
+            case GREEN:
+                green.insert(nbr, w);
+                break;
+            case BLUE:
+                blue.insert(nbr, w);
+                break;
+            case YELLOW:
+                yellow.insert(nbr, w);
+                break;
+            default:
+                none.insert(1, w);
+            }
+        }
+        else
+        {
+            switch (w->getColor())
+            {
+            case RED:
+                red.insert(-1, w);
+                break;
+            case GREEN:
+                green.insert(-1, w);
+                break;
+            case BLUE:
+                blue.insert(-1, w);
+                break;
+            case YELLOW:
+                yellow.insert(-1, w);
+                break;
+            default:
+                none.insert(2, w);
+            }
+        }
+    }
+
+    QString deck;
+    foreach (Card* w, none.values() + red.values() + green.values() + blue.values() + yellow.values())
         deck += w->toString(colored) + " ";
     return deck;
 }

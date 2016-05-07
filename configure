@@ -11,8 +11,6 @@ function errchk {
     return $status
 }
 
-errchk git submodule init
-errchk git submodule update
 cd src
-errchk qmake 
+errchk qmake "CONFIG+=release"
 echo You can now run './buildUNO'

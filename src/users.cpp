@@ -37,3 +37,8 @@ int Users::indexOf(QString _nick) const
             return users.indexOf(w);
     return -1;
 }
+
+User* Users::rand() const
+{
+    return users.at(qrand() % users.size());
+}

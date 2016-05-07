@@ -4,14 +4,14 @@
 #include "uno.h"
 #include "card.h"
 
-class UNO;
+QT_FORWARD_DECLARE_CLASS(UNO)
 class Deck
 {
 public:
     Deck(UNO *_parent);
     void init();
     QString randCards(int _count, bool colored = true);
-    void remCard(QString _color, QString _id);
+    void remCard(Color _color, QString _id);
 
     QList<Card*> getList() const
     {
@@ -29,7 +29,7 @@ public:
     }
 
     bool contains(Card *_card) const;
-    bool containsColor(QString _color) const;
+    bool containsColor(Color _color) const;
     bool containsId(QString _id) const;
     QString toString(bool colored = true) const;
 

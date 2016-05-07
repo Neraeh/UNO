@@ -3,8 +3,8 @@
 
 #include "uno.h"
 
-class UNO;
-class Player;
+QT_FORWARD_DECLARE_CLASS(UNO)
+QT_FORWARD_DECLARE_CLASS(Player)
 class Players
 {
 public:
@@ -67,4 +67,3 @@ private:
 };
 
 #endif // PLAYERS_H
-
