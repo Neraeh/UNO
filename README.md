@@ -11,7 +11,9 @@ $ git clone https://github.com/TheShayy/UNO.git && cd UNO
 $ ./configure
 $ ./buildUNO
 ```
-Once built, you can copy UNO and its environment by copying the UNO/build directory
+Once built, you can copy UNO and its environment by copying the UNO/build directory. 
+To see its output, type `./UNObot`. 
+To daemonize it, type `./startUNO`.
 
 # Windows
 **Don't forget to build and install libcommuni (link below) before trying to build UNO**

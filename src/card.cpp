@@ -43,7 +43,8 @@ QString Card::toString(bool colored) const
 
 QString Card::toString(Color color)
 {
-    switch (color) {
+    switch (color)
+    {
     case RED:
         return QObject::tr("R", "Red letter ingame (translate to first letter of the color in your language)");
     case GREEN:

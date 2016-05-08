@@ -10,7 +10,7 @@ UNO::UNO(QCoreApplication *_parent) : IrcConnection(_parent)
     players = new Players(this);
     users = new Users;
     lastCard = new Card(NONE, "");
-    inGame = false, preGame = false, drawed = false, inversed = false, inPing = false, inVersion = false;
+    identified = false, inGame = false, preGame = false, drawed = false, inversed = false, inPing = false, inVersion = false;
     updater = new Updater(qApp->applicationDirPath(), this);
     commands = new QHash<QString,fp>();
     commands->insert(tr("exit"), &UNO::exit);
@@ -151,7 +151,7 @@ void UNO::onConnect()
 {
     if (!settings->value("nspassword", QString()).toString().isEmpty())
     {
-        log(INFO, "Connected, logging in to NickServ");
+        log(INFO, tr("Connected, logging in to NickServ"));
         sendCommand(IrcCommand::createMessage("NickServ", "IDENTIFY " + settings->value("nspassword").toString()));
     }
     else
@@ -175,18 +175,33 @@ void UNO::onIrcMessage(IrcMessage *message)
 
     switch (code)
     {
+    case 400:
+        log(ERROR, tr("Unknown error reported by %1: %2").arg(host()).arg(message->parameters().join(" ")));
+        break;
+    case 403:
+        log(ERROR, tr("Channel %1 does not exist, exiting").arg(chan));
+        qApp->exit(403);
+    case 404:
+        log(ERROR, tr("Cannot send message to %1").arg(chan));
+        break;
     case 431:
         log(ERROR, tr("%1 said nickname is empty, exiting").arg(host()));
-        qApp->exit(1);
-        break;
+        qApp->exit(431);
     case 432:
         log(ERROR, tr("Erroneous nickname, exiting"));
-        qApp->exit(1);
-        break;
+        qApp->exit(432);
     case 433:
         log(ERROR, tr("%1 is already in use, exiting").arg(nickName()));
-        qApp->exit(1);
-        break;
+        qApp->exit(433);
+    case 436:
+        log(ERROR, tr("Nickname collision, exiting"));
+        qApp->exit(436);
+    case 471:
+        log(ERROR, tr("%1 is full, exiting").arg(chan));
+        qApp->exit(471);
+    case 473:
+        log(ERROR, tr("Invite only chans are not yet supported, exiting"));
+        qApp->exit(473);
     }
 }
 
@@ -234,8 +249,12 @@ void UNO::onKick(IrcKickMessage *message)
 
 void UNO::onMode(IrcModeMessage *message)
 {
-    if (message->kind() != IrcModeMessage::User)
-        return;
+    if (!identified && message->target() == nickName() && message->mode().contains("+r"))
+    {
+        identified = true;
+        log(INFO, tr("Identified. Joining %1").arg(chan));
+        sendCommand(IrcCommand::createJoin(chan));
+    }
     sendCommand(IrcCommand::createNames(chan));
 }
 
@@ -269,8 +288,9 @@ void UNO::onNick(IrcNickMessage *message)
 
 void UNO::onNotice(IrcNoticeMessage *message)
 {
-    if (message->nick() == "NickServ" && message->content().contains("You are now identified"))
+    if (!identified && message->nick() == "NickServ" && message->content().contains("You are now ") && (message->content().contains("identified") || message->content().contains("recognized")))
     {
+        identified = true;
         log(INFO, tr("Identified. Joining %1").arg(chan));
         sendCommand(IrcCommand::createJoin(chan));
     }

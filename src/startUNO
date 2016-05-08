@@ -1,5 +1,2 @@
 #!/bin/bash
-until ./UNObot; do
-	echo "UNO closed with code $?. Respawning..." >&2 
-	sleep 1
-done
+(./UNObot &>/dev/null &)& 

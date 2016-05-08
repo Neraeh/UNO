@@ -4,32 +4,32 @@
 <context>
     <name>QObject</name>
     <message>
-        <location filename="../card.cpp" line="48"/>
-        <location filename="../card.cpp" line="63"/>
+        <location filename="../card.cpp" line="49"/>
+        <location filename="../card.cpp" line="64"/>
         <location filename="../commands.cpp" line="189"/>
         <source>R</source>
         <comment>Red letter ingame (translate to first letter of the color in your language)</comment>
         <translation>R</translation>
     </message>
     <message>
-        <location filename="../card.cpp" line="50"/>
-        <location filename="../card.cpp" line="65"/>
+        <location filename="../card.cpp" line="51"/>
+        <location filename="../card.cpp" line="66"/>
         <location filename="../commands.cpp" line="189"/>
         <source>G</source>
         <comment>Green letter ingame (translate to first letter of the color in your language)</comment>
         <translation>V</translation>
     </message>
     <message>
-        <location filename="../card.cpp" line="52"/>
-        <location filename="../card.cpp" line="67"/>
+        <location filename="../card.cpp" line="53"/>
+        <location filename="../card.cpp" line="68"/>
         <location filename="../commands.cpp" line="189"/>
         <source>B</source>
         <comment>Blue letter ingame (translate to first letter of the color in your language)</comment>
         <translation>B</translation>
     </message>
     <message>
-        <location filename="../card.cpp" line="54"/>
-        <location filename="../card.cpp" line="69"/>
+        <location filename="../card.cpp" line="55"/>
+        <location filename="../card.cpp" line="70"/>
         <location filename="../commands.cpp" line="189"/>
         <source>Y</source>
         <comment>Yellow letter ingame (translate to first letter of the color in your language)</comment>
@@ -111,7 +111,7 @@
         <location filename="../commands.cpp" line="188"/>
         <location filename="../commands.cpp" line="484"/>
         <location filename="../uno.cpp" line="25"/>
-        <location filename="../uno.cpp" line="223"/>
+        <location filename="../uno.cpp" line="238"/>
         <source>help</source>
         <translation>aide</translation>
     </message>
@@ -268,7 +268,7 @@
         <location filename="../commands.cpp" line="200"/>
         <location filename="../commands.cpp" line="206"/>
         <location filename="../uno.cpp" line="32"/>
-        <location filename="../uno.cpp" line="221"/>
+        <location filename="../uno.cpp" line="236"/>
         <source>join</source>
         <translation>rejoindre</translation>
     </message>
@@ -448,108 +448,144 @@
         <translation>Déconnecté</translation>
     </message>
     <message>
-        <location filename="../uno.cpp" line="179"/>
+        <location filename="../uno.cpp" line="188"/>
         <source>%1 said nickname is empty, exiting</source>
         <translation>%1 a répondu que le nickname est vide, fermeture</translation>
     </message>
     <message>
-        <location filename="../uno.cpp" line="183"/>
+        <location filename="../uno.cpp" line="191"/>
         <source>Erroneous nickname, exiting</source>
         <translation>Mauvais nickname, fermeture</translation>
     </message>
     <message>
-        <location filename="../uno.cpp" line="187"/>
+        <location filename="../uno.cpp" line="194"/>
         <source>%1 is already in use, exiting</source>
         <translation>%1 est déjà utilisé, fermeture</translation>
     </message>
     <message>
-        <location filename="../uno.cpp" line="208"/>
+        <location filename="../uno.cpp" line="223"/>
         <source>%1%2 issued command %3</source>
         <translation>%1%2 a lancé la commande %3</translation>
     </message>
     <message>
-        <location filename="../uno.cpp" line="221"/>
-        <location filename="../uno.cpp" line="223"/>
+        <location filename="../uno.cpp" line="236"/>
+        <location filename="../uno.cpp" line="238"/>
         <source>Wanna play? Try the %1 command!</source>
         <translation>Envie de jouer ? Tapez %1 !</translation>
     </message>
     <message>
-        <location filename="../uno.cpp" line="255"/>
+        <location filename="../uno.cpp" line="273"/>
         <source>%1 is now %2</source>
         <translation>%1 est maintenant %2</translation>
     </message>
     <message>
-        <location filename="../uno.cpp" line="274"/>
+        <location filename="../uno.cpp" line="254"/>
+        <location filename="../uno.cpp" line="293"/>
         <source>Identified. Joining %1</source>
         <translation>Identifié, entrée dans %1</translation>
     </message>
     <message>
-        <location filename="../uno.cpp" line="279"/>
+        <location filename="../uno.cpp" line="154"/>
+        <source>Connected, logging in to NickServ</source>
+        <translation>Connecté, identification auprès de NickServ</translation>
+    </message>
+    <message>
+        <location filename="../uno.cpp" line="179"/>
+        <source>Unknown error reported by %1: %2</source>
+        <translation>Erreur inconnue reportée par %1 : %2</translation>
+    </message>
+    <message>
+        <location filename="../uno.cpp" line="182"/>
+        <source>Channel %1 does not exist, exiting</source>
+        <translation>Le cannal %1 n&apos;existe pas, fermeture</translation>
+    </message>
+    <message>
+        <location filename="../uno.cpp" line="185"/>
+        <source>Cannot send message to %1</source>
+        <translation>Impossible d&apos;envoyer le message à %1</translation>
+    </message>
+    <message>
+        <location filename="../uno.cpp" line="197"/>
+        <source>Nickname collision, exiting</source>
+        <translation>Collision de nickname, fermeture</translation>
+    </message>
+    <message>
+        <location filename="../uno.cpp" line="200"/>
+        <source>%1 is full, exiting</source>
+        <translation>%1 est plein, fermeture</translation>
+    </message>
+    <message>
+        <location filename="../uno.cpp" line="203"/>
+        <source>Invite only chans are not yet supported, exiting</source>
+        <translation>Les cannaux sur invitation seulement ne sont pas encore supportés, fermeture</translation>
+    </message>
+    <message>
+        <location filename="../uno.cpp" line="298"/>
         <source>%1 is using: %2</source>
         <translation>%1 utilise : %2</translation>
     </message>
     <message>
-        <location filename="../uno.cpp" line="326"/>
+        <location filename="../uno.cpp" line="345"/>
         <source>Running git</source>
         <translation>Lancement de git</translation>
     </message>
     <message>
-        <location filename="../uno.cpp" line="328"/>
+        <location filename="../uno.cpp" line="347"/>
         <source>Running configure</source>
         <translation>Lancement de configure</translation>
     </message>
     <message>
-        <location filename="../uno.cpp" line="330"/>
+        <location filename="../uno.cpp" line="349"/>
         <source>Building</source>
         <translation>Compilation</translation>
     </message>
     <message>
-        <location filename="../uno.cpp" line="332"/>
+        <location filename="../uno.cpp" line="351"/>
         <source>Replacing old files</source>
         <translation>Remplacement des anciens fichiers</translation>
     </message>
     <message>
-        <location filename="../uno.cpp" line="337"/>
+        <location filename="../uno.cpp" line="356"/>
         <source>Error processing step &apos;%1&apos;</source>
         <translation>Erreur pendant l&apos;étape &apos;%1&apos;</translation>
     </message>
     <message>
-        <location filename="../uno.cpp" line="342"/>
+        <location filename="../uno.cpp" line="361"/>
         <source>Launching freshly made UNObot</source>
         <translation>Lancement du fraîchement créé UNObot</translation>
     </message>
     <message>
-        <location filename="../uno.cpp" line="352"/>
-        <location filename="../uno.cpp" line="360"/>
+        <location filename="../uno.cpp" line="371"/>
+        <location filename="../uno.cpp" line="379"/>
         <source>%1 timed out</source>
         <translation>%1 n&apos;a pas répondu à temps</translation>
     </message>
     <message>
-        <location filename="../uno.cpp" line="369"/>
-        <location filename="../uno.cpp" line="370"/>
+        <location filename="../uno.cpp" line="388"/>
+        <location filename="../uno.cpp" line="389"/>
         <source>Timeout, the game is canceled</source>
         <translation>Temps écoulé, la partie est annulée</translation>
     </message>
     <message>
-        <location filename="../uno.cpp" line="397"/>
-        <location filename="../uno.cpp" line="398"/>
+        <location filename="../uno.cpp" line="416"/>
+        <location filename="../uno.cpp" line="417"/>
         <source>%1 left the game</source>
         <translation>%1 a quitté la partie</translation>
     </message>
     <message>
-        <location filename="../uno.cpp" line="404"/>
+        <location filename="../uno.cpp" line="423"/>
         <source>%1 won the game</source>
         <translation>%1 a gagné la partie</translation>
     </message>
     <message>
         <location filename="../commands.cpp" line="575"/>
-        <location filename="../uno.cpp" line="405"/>
+        <location filename="../uno.cpp" line="424"/>
         <source>%1 won the game!</source>
         <translation>%1 a gagné la partie !</translation>
     </message>
     <message>
-        <location filename="../uno.cpp" line="415"/>
-        <location filename="../uno.cpp" line="416"/>
+        <location filename="../uno.cpp" line="434"/>
+        <location filename="../uno.cpp" line="435"/>
         <source>No player left, the game is canceled</source>
         <translation>Aucun joueur restant, la partie est annulée</translation>
     </message>
@@ -566,7 +602,7 @@
         <translation>Mise à jour de %1</translation>
     </message>
     <message>
-        <location filename="../uno.cpp" line="343"/>
+        <location filename="../uno.cpp" line="362"/>
         <source>Updating...</source>
         <translation>Mise à jour...</translation>
     </message>
@@ -668,7 +704,7 @@
     </message>
     <message>
         <location filename="../commands.cpp" line="230"/>
-        <location filename="../uno.cpp" line="493"/>
+        <location filename="../uno.cpp" line="512"/>
         <source>This command does not exist, %1</source>
         <translation>Cette commande n&apos;existe pas, %1</translation>
     </message>
@@ -923,7 +959,7 @@
         <location filename="../commands.cpp" line="482"/>
         <location filename="../commands.cpp" line="613"/>
         <location filename="../commands.cpp" line="620"/>
-        <location filename="../uno.cpp" line="411"/>
+        <location filename="../uno.cpp" line="430"/>
         <source>%1, it&apos;s your turn</source>
         <translation>C&apos;est au tour de %1</translation>
     </message>
@@ -1043,17 +1079,17 @@
         <translation>Dernière carte : %c</translation>
     </message>
     <message>
-        <location filename="../uno.cpp" line="511"/>
+        <location filename="../uno.cpp" line="530"/>
         <source>Scores are empty</source>
         <translation>Le classement est vide</translation>
     </message>
     <message>
-        <location filename="../uno.cpp" line="515"/>
+        <location filename="../uno.cpp" line="534"/>
         <source>Scores:</source>
         <translation>Classement :</translation>
     </message>
     <message>
-        <location filename="../uno.cpp" line="539"/>
+        <location filename="../uno.cpp" line="558"/>
         <source>%1. %2 : %3 (%4 points for %5 wins on %6 games played)</source>
         <translation>%1. %2 : %3 (%4 points sur %5 victoires pour %6 parties)</translation>
     </message>

@@ -155,7 +155,7 @@ private:
     Card *lastCard;
     QString currPlayer, currPing, currVersion, chan;
     Users *users;
-    bool cnf, inGame, preGame, drawed, inversed, inPing, inVersion;
+    bool cnf, identified, inGame, preGame, drawed, inversed, inPing, inVersion;
     unsigned int pingTimeBegin, pingTime, pingCount;
     QSettings *settings, *slaps, *colors, *score, *bans, *accesslist;
     unsigned int verbose;
