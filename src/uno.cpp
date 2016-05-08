@@ -14,6 +14,9 @@ UNO::UNO(QCoreApplication *_parent) : IrcConnection(_parent)
     updater = new Updater(qApp->applicationDirPath(), this);
     commands = new QHash<QString,fp>();
     commands->insert(tr("exit"), &UNO::exit);
+    #ifndef Q_OS_WIN
+    commands->insert(tr("update"), &UNO::update);
+    #endif
     commands->insert(tr("kick"), &UNO::kick);
     commands->insert(tr("ban"), &UNO::ban);
     commands->insert(tr("unban"), &UNO::unban);
