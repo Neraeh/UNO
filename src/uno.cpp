@@ -561,7 +561,7 @@ void UNO::showScores()
                 ratio = currratio;
             }
         }
-        sendMessage((i == 9 ? "" : " ") + tr("%1. %2 : %3 (%4 points for %5 wins on %6 games played)").arg(QString::number(i + 1)).arg(users->contains(curr) ? users->get(curr)->getColoredName().insert(7, "\u200B") : "\x02" + curr + "\x0F").arg(QString::number((int)ratio)).arg(score->value("Points/" + curr).toString()).arg(score->value(curr).toString()).arg(score->value("Total/" + curr).toString()));
+        sendMessage((i == 9 ? "" : " ") + tr("%1. %2 : %3 (%4 points for %5 wins on %6 games played, winrate: %7%)").arg(QString::number(i + 1)).arg(users->contains(curr) ? users->get(curr)->getColoredName().insert(7, "\u200B") : "\x02" + curr + "\x0F").arg(QString::number((int)ratio)).arg(score->value("Points/" + curr).toString()).arg(score->value(curr).toString()).arg(score->value("Total/" + curr).toString()).arg(QString::number(((score->value(curr).toInt()*100/score->value("Total/" + curr).toInt())))));
         people.removeOne(curr);
 
         if (people.isEmpty())

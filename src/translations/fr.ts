@@ -581,6 +581,11 @@
         <translation>%1 a gagné la partie</translation>
     </message>
     <message>
+        <location filename="../uno.cpp" line="564"/>
+        <source>%1. %2 : %3 (%4 points for %5 wins on %6 games played, winrate: %7%)</source>
+        <translation>%1. %2 : %3 (%4 points sur %5 victoires pour %6 parties, taux de victoires : %7%)</translation>
+    </message>
+    <message>
         <location filename="../commands.cpp" line="590"/>
         <location filename="../uno.cpp" line="430"/>
         <source>%1 won the game!</source>
@@ -1182,9 +1187,8 @@
         <translation>Classement :</translation>
     </message>
     <message>
-        <location filename="../uno.cpp" line="564"/>
         <source>%1. %2 : %3 (%4 points for %5 wins on %6 games played)</source>
-        <translation>%1. %2 : %3 (%4 points sur %5 victoires pour %6 parties)</translation>
+        <translation type="vanished">%1. %2 : %3 (%4 points sur %5 victoires pour %6 parties)</translation>
     </message>
     <message>
         <location filename="../uno.h" line="50"/>
