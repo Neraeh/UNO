@@ -27,6 +27,21 @@ void UNO::update(QString nick, QStringList args)
 }
 #endif
 
+void UNO::changeTrigger(QString nick, QStringList args)
+{
+    if (!isOp(nick) || args.isEmpty())
+        return;
+
+    if (args.size() > 1)
+        sendNotice(nick, tr("Usage: %1").arg(QString(trigger) + " " + tr("trigger") + " <trigger>"));
+    else if (args.first().size() > 1)
+        sendNotice(nick, tr("The trigger can only be a single character"));
+    else {
+        settings->setValue("trigger", trigger = args.first().at(0));
+        sendNotice(nick, tr("The trigger is now %1").arg(trigger));
+    }
+}
+
 void UNO::kick(QString nick, QStringList args)
 {
     if (!isOp(nick) || args.isEmpty())
@@ -85,7 +100,7 @@ void UNO::al(QString nick, QStringList args)
                 sendNotice(nick, tr("%1 was not found").arg("\x02" + args.at(1) + "\x0F"));
         }
         else
-            sendNotice(nick, tr("Usage: %1").arg("!" + tr("al") + " add <%2>").arg(tr("nick")));
+            sendNotice(nick, tr("Usage: %1").arg(QString(trigger) + tr("al") + " add <%2>").arg(tr("nick")));
     }
     else if (args.first() == "del" && args.size() == 2)
     {
@@ -100,7 +115,7 @@ void UNO::al(QString nick, QStringList args)
                 sendNotice(nick, tr("%1 is not in the access list").arg(users->contains(args.at(1)) ? users->get(args.at(1))->getColoredName() : "\x02" + args.at(1) + "\x0F"));
         }
         else
-            sendNotice(nick, tr("Usage: %1").arg("!" + tr("al") + " del <%2>").arg(tr("nick")));
+            sendNotice(nick, tr("Usage: %1").arg(QString(trigger) + tr("al") + " del <%2>").arg(tr("nick")));
     }
     else if (args.first() == "list")
     {
@@ -116,7 +131,7 @@ void UNO::al(QString nick, QStringList args)
                 sendNotice(nick, tr("%1 is not in the access list").arg(users->contains(args.at(1)) ? users->get(args.at(1))->getColoredName() : "\x02" + args.at(1) + "\x0F"));
         }
         else
-            sendNotice(nick, tr("Usage: %1").arg("!" + tr("al") + " host %2").arg(tr("nick")));
+            sendNotice(nick, tr("Usage: %1").arg(QString(trigger) + tr("al") + " host %2").arg(tr("nick")));
     }
 }
 
@@ -145,7 +160,7 @@ void UNO::color(QString nick, QStringList args)
 {
     if (args.isEmpty() || args.size() > 1)
     {
-        sendNotice(nick, tr("Usage : !%1 number").arg(tr("color")));
+        sendNotice(nick, tr("Usage : %1%2 number").arg(trigger).arg(tr("color")));
         sendNotice(nick, tr("Available numbers : %1").arg("\x03""022  ""\x03""033  ""\x03""044  ""\x03""055  ""\x03""066  ""\x03""077  ""\x03""088  ""\x03""099  ""\x03""1010  ""\x03""1111  ""\x03""1212  ""\x03""1313"));
         sendNotice(nick, tr("Current color : %1").arg(users->get(nick)->getColoredName()));
     }
@@ -184,48 +199,48 @@ void UNO::help(QString nick, QStringList args)
 {
     if (args.isEmpty())
     {
-        sendNotice(nick, "!" + tr("version") + ", !" + tr("rules") + ", !" + tr("color") + ", !" + tr("nocolor") + ", !" + tr("scores") + ", !" + tr("list") + ", !" + tr("quit") + ", !" + tr("uno") + ", !" + tr("join") + ", !" + tr("begin") + ", !" + tr("p") + ", !" + tr("draw") + ", !" + tr("end") + ", !" + tr("hand") + ", !" + tr("cards"));
-        sendNotice(nick, tr("Type %1 to learn more about a command (example: %2)").arg("\x02""!" + tr("help") + " <" + tr("command") + ">""\x0F").arg("!" + tr("help") + " " + tr("join")));
+        sendNotice(nick, QString(trigger) + tr("version") + ",  " + QString(trigger) + tr("rules") + ", " + QString(trigger) + tr("color") + ", " + QString(trigger) + tr("nocolor") + ", " + QString(trigger) + tr("scores") + ", " + QString(trigger) + tr("list") + ", " + QString(trigger) + tr("quit") + ", " + QString(trigger) + tr("uno") + ", " + QString(trigger) + tr("join") + ", " + QString(trigger) + tr("begin") + ", " + QString(trigger) + tr("p") + ", " + QString(trigger) + tr("draw") + ", " + QString(trigger) + tr("end") + ", " + QString(trigger) + tr("hand") + ", " + QString(trigger) + tr("cards"));
+        sendNotice(nick, tr("Type %1 to learn more about a command (example: %2)").arg("\x02" + QString(trigger) + tr("help") + " <" + tr("command") + ">""\x0F").arg(QString(trigger) + tr("help") + " " + tr("join")));
         sendNotice(nick, tr("Colors: %1 %2 %3 %4").arg("\x02""\x03""01,04""[" + QObject::tr("R", "Red letter ingame (translate to first letter of the color in your language)") + "] " + tr("red") + "\x0F").arg("\x02""\x03""01,03""[" + QObject::tr("G", "Green letter ingame (translate to first letter of the color in your language)") + "] " + tr("green") + "\x0F").arg("\x02""\x03""01,11""[" + QObject::tr("B", "Blue letter ingame (translate to first letter of the color in your language)") + "] " + tr("blue") + "\x0F").arg("\x02""\x03""01,08""[" + QObject::tr("Y", "Yellow letter ingame (translate to first letter of the color in your language)") + "] " + tr("yellow") + "\x0F"));
     }
     else if (args.first() == tr("uno"))
-        sendNotice(nick, tr("%1 !%2 : create a new game").arg("\x02" + tr("Help :") + "\x0F").arg(tr("uno")));
+        sendNotice(nick, tr("%1 %2 : create a new game").arg("\x02" + tr("Help :") + "\x0F").arg(trigger + tr("uno")));
     else if (args.first() == tr("p"))
     {
-        sendNotice(nick, tr("%1 !%2").arg("\x02" + tr("Help :") + "\x0F").arg(tr("p")));
-        sendNotice(nick, tr("Usage : !%1 color card").arg(tr("p")));
-        sendNotice(nick, tr("Example : to play a %c you should type !%1 %2 7").arg(tr("p")).arg(tr("G", "Green letter ingame (translate to first letter of the color in your language)")), new Card(GREEN, "7"));
+        sendNotice(nick, tr("%1 %2").arg("\x02" + tr("Help :") + "\x0F").arg(trigger + tr("p")));
+        sendNotice(nick, tr("Usage : %1 color card").arg(trigger + tr("p")));
+        sendNotice(nick, tr("Example : to play a %c you should type %1 %2 7").arg(trigger + tr("p")).arg(tr("G", "Green letter ingame (translate to first letter of the color in your language)")), new Card(GREEN, "7"));
     }
     else if (args.first() == tr("join"))
-        sendNotice(nick, tr("%1 !%2 : join the current game").arg("\x02" + tr("Help :") + "\x0F").arg(tr("join")));
+        sendNotice(nick, tr("%1 %2 : join the current game").arg("\x02" + tr("Help :") + "\x0F").arg(trigger + tr("join")));
     else if (args.first() == tr("quit"))
-        sendNotice(nick, tr("%1 !%2 : leave the game").arg("\x02" + tr("Help :") + "\x0F").arg(tr("quit")));
+        sendNotice(nick, tr("%1 %2 : leave the game").arg("\x02" + tr("Help :") + "\x0F").arg(trigger + tr("quit")));
     else if (args.first() == tr("begin"))
-        sendNotice(nick, tr("%1 !%2 : begin the game").arg("\x02" + tr("Help :") + "\x0F").arg(tr("begin")));
+        sendNotice(nick, tr("%1 %2 : begin the game").arg("\x02" + tr("Help :") + "\x0F").arg(trigger + tr("begin")));
     else if (args.first() == tr("list"))
-        sendNotice(nick, tr("%1 !%2 : display players list").arg("\x02" + tr("Help :") + "\x0F").arg(tr("join")));
+        sendNotice(nick, tr("%1 %2 : display players list").arg("\x02" + tr("Help :") + "\x0F").arg(trigger + tr("join")));
     else if (args.first() == tr("draw"))
-        sendNotice(nick, tr("%1 !%2 : draw a card").arg("\x02" + tr("Help :") + "\x0F").arg(tr("draw")));
+        sendNotice(nick, tr("%1 %2 : draw a card").arg("\x02" + tr("Help :") + "\x0F").arg(trigger + tr("draw")));
     else if (args.first() == tr("end"))
-        sendNotice(nick, tr("%1 !%2 : skip your turn").arg("\x02" + tr("Help :") + "\x0F").arg(tr("end")));
+        sendNotice(nick, tr("%1 %2 : skip your turn").arg("\x02" + tr("Help :") + "\x0F").arg(trigger + tr("end")));
     else if (args.first() == tr("hand"))
-        sendNotice(nick, tr("%1 !%2 : display your cards and the last played card").arg("\x02" + tr("Help :") + "\x0F").arg(tr("hand")));
+        sendNotice(nick, tr("%1 %2 : display your cards and the last played card").arg("\x02" + tr("Help :") + "\x0F").arg(trigger + tr("hand")));
     else if (args.first() == tr("cards"))
-        sendNotice(nick, tr("%1 !%2 : display the remaining cards count and the players cards count").arg("\x02" + tr("Help :") + "\x0F").arg(tr("cards")));
+        sendNotice(nick, tr("%1 %2 : display the remaining cards count and the players cards count").arg("\x02" + tr("Help :") + "\x0F").arg(trigger + tr("cards")));
     else if (args.first() == tr("rules"))
-        sendNotice(nick, tr("%1 !%2 : send a link to the rules").arg("\x02" + tr("Help :") + "\x0F").arg(tr("rules")));
+        sendNotice(nick, tr("%1 %2 : send a link to the rules").arg("\x02" + tr("Help :") + "\x0F").arg(trigger + tr("rules")));
     else if (args.first() == tr("ping"))
-        sendNotice(nick, tr("%1 !%2 : display the latency between %2 and you").arg("\x02" + tr("Help :") + "\x0F").arg("\x02" + nickName() + "\x0F").arg(tr("ping")));
+        sendNotice(nick, tr("%1 %2 : display the latency between %2 and you").arg("\x02" + tr("Help :") + "\x0F").arg("\x02" + nickName() + "\x0F").arg(trigger + tr("ping")));
     else if (args.first() == tr("version"))
-        sendNotice(nick, tr("%1 !%2 : display the client version of the given user").arg("\x02" + tr("Help :") + "\x0F").arg(tr("version")));
+        sendNotice(nick, tr("%1 %2 : display the client version of the given user").arg("\x02" + tr("Help :") + "\x0F").arg(trigger + tr("version")));
     else if (args.first() == tr("slaps"))
         command(nickName(), tr("slaps"), QStringList() << nick);
     else if (args.first() == tr("color"))
-        sendNotice(nick, tr("%1 !%2 : choose your color").arg("\x02" + tr("Help :") + "\x0F").arg(tr("color")));
+        sendNotice(nick, tr("%1 %2 : choose your color").arg("\x02" + tr("Help :") + "\x0F").arg(trigger + tr("color")));
     else if (args.first() == tr("nocolor"))
-        sendNotice(nick, tr("%1 !%2 : enable/disable the color compatibilty mode").arg("\x02" + tr("Help :") + "\x0F").arg(tr("nocolor")));
+        sendNotice(nick, tr("%1 %2 : enable/disable the color compatibilty mode").arg("\x02" + tr("Help :") + "\x0F").arg(trigger + tr("nocolor")));
     else if (args.first() == tr("scores"))
-        sendNotice(nick, tr("%1 !%2 : display scores").arg("\x02" + tr("Help :") + "\x0F").arg(tr("scores")));
+        sendNotice(nick, tr("%1 %2 : display scores").arg("\x02" + tr("Help :") + "\x0F").arg(trigger + tr("scores")));
     else
         sendNotice(nick, tr("This command does not exist, %1").arg(users->get(nick)->getColoredName()));
 }
@@ -265,7 +280,7 @@ void UNO::slap(QString nick, QStringList args)
     if (args.isEmpty())
         args.append(users->rand()->getNick());
 
-    sendCommand(IrcCommand::createMessage(chan, " ""\x02""\x03""00,14" + users->get(nick)->getColoredName() + " " + slaps->value(QString::number(qrand() % slaps->allKeys().size())).toString().replace("%s", (users->contains(args.first()) ? users->get(args.first())->getColoredName() : "\x03""04,15" + args.first() + "\x03""00,14")) + " "));
+    sendCommand(IrcCommand::createMessage(chan, "\x02""\x03""00,14 " + users->get(nick)->getColoredName() + " " + slaps->value(QString::number(qrand() % slaps->allKeys().size())).toString().replace("%s", (users->contains(args.first()) ? users->get(args.first())->getColoredName() : "\x03""04,15" + args.first() + "\x03""00,14")) + " "));
 }
 
 void UNO::ping(QString nick, QStringList args)
@@ -481,7 +496,7 @@ void UNO::play(QString nick, QStringList args)
     else if (currPlayer != nick)
         sendMessage(tr("%1, it's your turn").arg(curr->getColoredName()));
     else if (args.size() < 2)
-        sendMessage(tr("%1 to learn how to use it").arg("\x02""!" + tr("help") + " " + tr("p") + "\x0F"));
+        sendMessage(tr("%1 to learn how to use it").arg("\x02" + QString(trigger) + tr("help") + " " + tr("p") + "\x0F"));
     else if (curr->getDeck()->contains(new Card(args.at(0), args.at(1))) || curr->getDeck()->contains(new Card(NONE, args.at(1))))
     {
         Color color = Card::toColor(args.at(0));
@@ -596,7 +611,7 @@ void UNO::turnEnd()
         sendMessage(tr("%1 earned %2 points !").arg(players->get(currPlayer)->getColoredName()).arg(QString::number(points - origpoints)));
 
         sendMessage(" --- ");
-        sendMessage(tr("Type %1 to show the scores").arg("\x02""!" + tr("scores") + "\x0F"));
+        sendMessage(tr("Type %1 to show the scores").arg("\x02" + QString(trigger) + tr("scores") + "\x0F"));
         flushMessages();
         clear();
         return;

@@ -120,6 +120,7 @@ private:
 #ifndef Q_OS_WIN
     void update(QString nick, QStringList args);
 #endif
+    void changeTrigger(QString nick, QStringList args);
     void kick(QString nick, QStringList args);
     void ban(QString nick, QStringList args);
     void unban(QString nick, QStringList args);
@@ -153,6 +154,7 @@ private:
     QStringList turns, messages;
     QMultiMap<QString,QString> notices;
     Card *lastCard;
+    QChar trigger;
     QString currPlayer, currPing, currVersion, chan;
     Users *users;
     bool cnf, identified, inGame, preGame, drawed, inversed, inPing, inVersion;

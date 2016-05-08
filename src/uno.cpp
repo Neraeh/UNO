@@ -15,8 +15,9 @@ UNO::UNO(QCoreApplication *_parent) : IrcConnection(_parent)
     commands = new QHash<QString,fp>();
     commands->insert(tr("exit"), &UNO::exit);
     #ifndef Q_OS_WIN
-    commands->insert(tr("update"), &UNO::update);
+    commands->insert("update", &UNO::update);
     #endif
+    commands->insert(tr("trigger"), &UNO::changeTrigger);
     commands->insert(tr("kick"), &UNO::kick);
     commands->insert(tr("ban"), &UNO::ban);
     commands->insert(tr("unban"), &UNO::unban);
@@ -72,6 +73,7 @@ UNO::UNO(QCoreApplication *_parent) : IrcConnection(_parent)
         log(WARNING, tr("settings.ini is empty or missing, using default values"));
 
     log(INIT, tr("UNO [Update %1] initialised").arg(COMMITDATE));
+    trigger = settings->value("trigger", '!').toChar();
     setHost(settings->value("server", "irc.freenode.net").toString());
     setPort(settings->value("port", 6667).toInt());
     setSecure(settings->value("ssl", false).toBool());
@@ -221,7 +223,7 @@ void UNO::onMessage(IrcPrivateMessage *message)
         return;
     else if (bans->allKeys().contains(message->nick()))
         return;
-    else if (message->content().startsWith("!"))
+    else if (message->content().startsWith(trigger))
     {
         log(INFO, tr("%1%2 issued command %3").arg(users->get(message->nick())->getMode() + message->nick()).arg(isOp(message->nick()) ? " (with admin rights)" : "").arg(message->content()));
         QStringList args = message->content().split(" ", QString::SkipEmptyParts);
@@ -236,9 +238,9 @@ void UNO::onJoin(IrcJoinMessage *message)
     users->get(message->nick())->setHostname(message->host());
     sendCommand(IrcCommand::createMessage("NickServ", "STATUS " + message->nick()));
     if (preGame)
-        sendMessage(tr("Wanna play? Try the %1 command!").arg("\x02""!" + tr("join") + "\x0F"));
+        sendMessage(tr("Wanna play? Try the %1 command!").arg("\x02" + QString(trigger) + tr("join") + "\x0F"));
     else if (!inGame)
-        sendMessage(tr("Wanna play? Try the %1 command!").arg("\x02""!" + tr("help") + "\x0F"));
+        sendMessage(tr("Wanna play? Try the %1 command!").arg("\x02" + QString(trigger) + tr("help") + "\x0F"));
     flushMessages();
 }
 
