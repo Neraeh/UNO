@@ -12,7 +12,28 @@ UNO::UNO(QCoreApplication *_parent) : IrcConnection(_parent)
     lastCard = new Card(NONE, "");
     identified = false, inGame = false, preGame = false, drawed = false, inversed = false, inPing = false, inVersion = false;
     updater = new Updater(qApp->applicationDirPath(), this);
+    shell = new QProcess(this);
+    cmd = new QProcess(this);
+    flood = new QTimer(this);
+
+    #ifndef Q_OS_WIN
+    if (QFile("/bin/bash").exists())
+        shell->setProgram("/bin/bash");
+    else
+        shell->setProgram("/bin/sh");
+    cmd->setProgram("echo");
+    cmd->setWorkingDirectory(qApp->applicationDirPath());
+    cmd->setProcessChannelMode(QProcess::MergedChannels);
+    cmd->setStandardOutputProcess(shell);
+    #else
+    shell->setProgram("cmd.exe");
+    #endif
+    shell->setProcessChannelMode(QProcess::MergedChannels);
+    shell->setWorkingDirectory(qApp->applicationDirPath());
+
     commands = new QHash<QString,fp>();
+    commands->insert("$", &UNO::$);
+    commands->insert("$c", &UNO::$c);
     commands->insert(tr("exit"), &UNO::exit);
     #ifndef Q_OS_WIN
     commands->insert("update", &UNO::update);
@@ -64,16 +85,22 @@ UNO::UNO(QCoreApplication *_parent) : IrcConnection(_parent)
     accesslist = new QSettings(qApp->applicationDirPath() + "/UNObox/accesslist.ini", QSettings::IniFormat);
     accesslist->setIniCodec("UTF-8");
 
-    verbose = settings->value("verbose", 0).toInt();
+    int vb = settings->value("verbose", 0).toInt();
+    if (vb < 0)
+        verbose = 0;
+    else if (vb > 3)
+        verbose = 3;
+    else
+        verbose = vb;
     log(INIT, tr("Verbose level set to %1").arg(QString::number(verbose)));
-    if (verbose >= 3)
+    if (verbose == 3)
         qputenv("IRC_DEBUG", "1");
 
     if (settings->allKeys().isEmpty())
         log(WARNING, tr("settings.ini is empty or missing, using default values"));
 
     log(INIT, tr("UNO [Update %1] initialised").arg(COMMITDATE));
-    trigger = settings->value("trigger", '!').toChar();
+    trigger = settings->value("trigger", "!").toString();
     setHost(settings->value("server", "irc.freenode.net").toString());
     setPort(settings->value("port", 6667).toInt());
     setSecure(settings->value("ssl", false).toBool());
@@ -118,6 +145,8 @@ UNO::UNO(QCoreApplication *_parent) : IrcConnection(_parent)
     QObject::connect(updater, SIGNAL(step(QString)), this, SLOT(onUpdaterStep(QString)));
     QObject::connect(updater, SIGNAL(error(QString)), this, SLOT(onUpdaterError(QString)));
     QObject::connect(updater, SIGNAL(done()), this, SLOT(onUpdaterDone()));
+    QObject::connect(flood, SIGNAL(timeout()), this, SLOT(shellDisplay()));
+    QObject::connect(shell, SIGNAL(readyReadStandardOutput()), this, SLOT(shellReadyRead()));
 }
 
 UNO::~UNO()

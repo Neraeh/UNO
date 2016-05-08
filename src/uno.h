@@ -41,7 +41,7 @@ public:
         INIT
     };
 
-    void log(Log l, QString w) // Level rules: 0 = nothing; 1 += errors and warnings only; 2 += infos; 3 += libcommuni debug
+    void log(Log l, QString w) // Level rules: 0 = errors only; 1 += warnings; 2 += infos; 3 += libcommuni debug
     {
         switch (l)
         {
@@ -54,8 +54,7 @@ public:
                 qDebug() << qPrintable("[" + tr("WARN") + "] " + w);
             break;
         case ERROR:
-            if (verbose >= 1)
-                qDebug() << qPrintable("[" + tr("ERROR") + "] " + w);
+            qDebug() << qPrintable("[" + tr("ERROR") + "] " + w);
             break;
         case INIT:
             qDebug() << qPrintable(w);
@@ -100,6 +99,9 @@ private slots:
     void versionTimeout();
     void preGameTimeout();
 
+    void shellReadyRead();
+    void shellDisplay();
+
 private:
     void showCards(QString nick = QString(), QString to = QString());
     QString nextPlayer() const;
@@ -116,6 +118,8 @@ private:
     bool startsWithMode(QString nick);
 
 // Commands
+    void $(QString nick, QStringList args);
+    void $c(QString nick, QStringList args);
     void exit(QString nick, QStringList args);
 #ifndef Q_OS_WIN
     void update(QString nick, QStringList args);
@@ -151,11 +155,12 @@ private:
     QHash<QString,fp> *commands;
     Cards *pick;
     Players *players;
-    QStringList turns, messages;
+    QStringList turns, messages, output;
     QMultiMap<QString,QString> notices;
+    QProcess *shell, *cmd;
+    QTimer *flood;
     Card *lastCard;
-    QChar trigger;
-    QString currPlayer, currPing, currVersion, chan;
+    QString currPlayer, currPing, currVersion, chan, trigger;
     Users *users;
     bool cnf, identified, inGame, preGame, drawed, inversed, inPing, inVersion;
     unsigned int pingTimeBegin, pingTime, pingCount;
