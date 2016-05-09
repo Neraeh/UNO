@@ -15,29 +15,32 @@ UNO::UNO(QCoreApplication *_parent) : IrcConnection(_parent)
     shell = new QProcess(this);
     cmd = new QProcess(this);
     flood = new QTimer(this);
+    rbash = true;
 
-    #ifndef Q_OS_WIN
-    if (QFile("/bin/bash").exists())
-        shell->setProgram("/bin/bash");
+#ifndef Q_OS_WIN
+    if (QFile("/bin/rbash").exists())
+    {
+        shell->setProgram("/bin/rbash");
+        cmd->setProgram("echo");
+        cmd->setWorkingDirectory(QDir::homePath());
+        cmd->setProcessChannelMode(QProcess::MergedChannels);
+        cmd->setStandardOutputProcess(shell);
+    }
     else
-        shell->setProgram("/bin/sh");
-    cmd->setProgram("echo");
-    cmd->setWorkingDirectory(qApp->applicationDirPath());
-    cmd->setProcessChannelMode(QProcess::MergedChannels);
-    cmd->setStandardOutputProcess(shell);
-    #else
+        rbash = false;
+#else
     shell->setProgram("cmd.exe");
-    #endif
+#endif
     shell->setProcessChannelMode(QProcess::MergedChannels);
-    shell->setWorkingDirectory(qApp->applicationDirPath());
+    shell->setWorkingDirectory(QDir::homePath());
 
     commands = new QHash<QString,fp>();
     commands->insert("$", &UNO::$);
     commands->insert("$c", &UNO::$c);
     commands->insert(tr("exit"), &UNO::exit);
-    #ifndef Q_OS_WIN
+#ifndef Q_OS_WIN
     commands->insert("update", &UNO::update);
-    #endif
+#endif
     commands->insert(tr("trigger"), &UNO::changeTrigger);
     commands->insert(tr("kick"), &UNO::kick);
     commands->insert(tr("ban"), &UNO::ban);

@@ -5,6 +5,9 @@
 
 void UNO::$(QString nick, QStringList args)
 {
+    if (!rbash)
+        return;
+
     if (!isOp(nick) || args.isEmpty())
         return;
 
@@ -534,9 +537,9 @@ void UNO::cardsGame(QString nick, QStringList args)
         sendMessage(tr("There is no game, %1").arg(users->get(nick)->getColoredName()));
     else
     {
-        sendNotice(nick, tr("%1 cards remaining").arg(QString::number(pick->size())));
+        sendMessage(tr("%1 cards remaining").arg(QString::number(pick->size())));
         foreach (Player *w, players->getList())
-            sendNotice(nick, tr("%1 has %2 cards").arg(w->getColoredName()).arg(QString::number(w->getDeck()->size())));
+            sendMessage(tr("%1 has %2 cards").arg(w->getColoredName()).arg(QString::number(w->getDeck()->size())));
     }
 }
 
