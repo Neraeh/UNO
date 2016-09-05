@@ -3,60 +3,6 @@
 
 #include "uno.h" // For syntax highlighting, useless for building
 
-void UNO::$(QString nick, QStringList args)
-{
-    if (!rbash)
-        return;
-
-    if (!isOp(nick) || args.isEmpty())
-        return;
-
-    if (shell->state() == QProcess::Running || cmd->state() == QProcess::Running) {
-        sendMessage(tr("Command `%1` is still running, or has blocked the shell, type %2$c to stop it").arg(cmd->arguments().join(" ")).arg(trigger));
-    }
-
-    #ifndef Q_OS_WIN
-    cmd->setArguments(args);
-    cmd->start();
-    #else
-    shell.setProgram("cmd.exe");
-    shell.setArguments(QStringList() << "/c" << args);
-    #endif
-
-    shell->start();
-}
-
-void UNO::shellReadyRead()
-{
-    output.append(QString(shell->readAllStandardOutput()).split('\n'));
-    output.removeAll("");
-    if (!flood->isActive())
-        flood->start(500);
-}
-
-void UNO::shellDisplay()
-{
-    if (!output.isEmpty())
-    {
-        sendCommand(IrcCommand::createMessage(chan, "> " + output.first()));
-        output.removeFirst();
-        if (output.isEmpty())
-            flood->stop();
-    }
-}
-
-void UNO::$c(QString nick, QStringList args)
-{
-    Q_UNUSED(args)
-    if (!isOp(nick))
-        return;
-
-    if (shell->state() == QProcess::Running)
-        shell->kill();
-    if (cmd->state() == QProcess::Running)
-        cmd->kill();
-}
-
 void UNO::exit(QString nick, QStringList args)
 {
     if (!isOp(nick))

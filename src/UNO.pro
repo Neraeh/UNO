@@ -12,6 +12,7 @@ DESTDIR = ../build
 CONFIG   += console communi
 CONFIG   -= app_bundle
 COMMUNI += core
+INCLUDEPATH += Communi/IrcCore/
 
 QMAKE_CFLAGS_RELEASE += -march=native -O3 -pipe -fomit-frame-pointer
 QMAKE_CXXFLAGS_RELEASE += $$QMAKE_CFLAGS_RELEASE

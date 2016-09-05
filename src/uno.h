@@ -99,9 +99,6 @@ private slots:
     void versionTimeout();
     void preGameTimeout();
 
-    void shellReadyRead();
-    void shellDisplay();
-
 private:
     void showCards(QString nick = QString(), QString to = QString());
     QString nextPlayer() const;
@@ -118,8 +115,6 @@ private:
     bool startsWithMode(QString nick);
 
 // Commands
-    void $(QString nick, QStringList args);
-    void $c(QString nick, QStringList args);
     void exit(QString nick, QStringList args);
 #ifndef Q_OS_WIN
     void update(QString nick, QStringList args);
@@ -157,8 +152,6 @@ private:
     Players *players;
     QStringList turns, messages, output;
     QMultiMap<QString,QString> notices;
-    QProcess *shell, *cmd;
-    QTimer *flood;
     Card *lastCard;
     QString currPlayer, currPing, currVersion, chan, trigger;
     Users *users;

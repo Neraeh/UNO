@@ -11,32 +11,11 @@ UNO::UNO(QCoreApplication *_parent) : IrcConnection(_parent)
     users = new Users;
     lastCard = new Card(NONE, "");
     identified = false, inGame = false, preGame = false, drawed = false, inversed = false, inPing = false, inVersion = false;
-    updater = new Updater(qApp->applicationDirPath(), this);
-    shell = new QProcess(this);
-    cmd = new QProcess(this);
-    flood = new QTimer(this);
-    rbash = true;
-
 #ifndef Q_OS_WIN
-    if (QFile("/bin/rbash").exists())
-    {
-        shell->setProgram("/bin/rbash");
-        cmd->setProgram("echo");
-        cmd->setWorkingDirectory(QDir::homePath());
-        cmd->setProcessChannelMode(QProcess::MergedChannels);
-        cmd->setStandardOutputProcess(shell);
-    }
-    else
-        rbash = false;
-#else
-    shell->setProgram("cmd.exe");
+    updater = new Updater(qApp->applicationDirPath(), this);
 #endif
-    shell->setProcessChannelMode(QProcess::MergedChannels);
-    shell->setWorkingDirectory(QDir::homePath());
 
     commands = new QHash<QString,fp>();
-    commands->insert("$", &UNO::$);
-    commands->insert("$c", &UNO::$c);
     commands->insert(tr("exit"), &UNO::exit);
 #ifndef Q_OS_WIN
     commands->insert("update", &UNO::update);
@@ -145,11 +124,11 @@ UNO::UNO(QCoreApplication *_parent) : IrcConnection(_parent)
     QObject::connect(this, SIGNAL(partMessageReceived(IrcPartMessage*)), this, SLOT(onPart(IrcPartMessage*)));
     QObject::connect(this, SIGNAL(quitMessageReceived(IrcQuitMessage*)), this, SLOT(onQuit(IrcQuitMessage*)));
 
+#ifndef Q_OS_WIN
     QObject::connect(updater, SIGNAL(step(QString)), this, SLOT(onUpdaterStep(QString)));
     QObject::connect(updater, SIGNAL(error(QString)), this, SLOT(onUpdaterError(QString)));
     QObject::connect(updater, SIGNAL(done()), this, SLOT(onUpdaterDone()));
-    QObject::connect(flood, SIGNAL(timeout()), this, SLOT(shellDisplay()));
-    QObject::connect(shell, SIGNAL(readyReadStandardOutput()), this, SLOT(shellReadyRead()));
+#endif
 }
 
 UNO::~UNO()
@@ -165,7 +144,9 @@ UNO::~UNO()
     colors->sync();
     score->sync();
     bans->sync();
+#ifndef Q_OS_WIN
     delete updater;
+#endif
     delete pick;
     delete players;
     delete users;
